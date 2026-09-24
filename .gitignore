@@ -4,3 +4,4 @@ __pycache__/
 .env
 *.keypair.json
 node_modules/
+launch/
