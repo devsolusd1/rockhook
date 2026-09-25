@@ -255,7 +255,7 @@
     <div class="bar">
       <div class="mark">ROCK<span>HOOK</span></div>
       <div class="bar-right">
-        <div class="status">Forge opens at launch</div>
+        <div class="status" id="forge-status">Forge opens at launch</div>
         <a class="xlink" href="https://x.com/Rockhookfun" target="_blank" rel="noopener" aria-label="RockHook on X (@Rockhookfun)">
           <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           @Rockhookfun
@@ -281,7 +281,7 @@
         <h1 id="hero-title">Every buy forges a <em>Rocky</em>.</h1>
         <p class="lede">RockHook carries a hook in its code. Each time someone buys $ROCK on the curve, the hook writes it down on-chain and that buy becomes a Rocky NFT. The more $ROCK a buy gets, the hotter it burns, so the earliest buys burn brightest. When the curve graduates, the forge goes cold for good.</p>
         <div class="actions">
-          <a class="btn" aria-disabled="true" role="link">Buy soon</a>
+          <a class="btn" id="buy" aria-disabled="true" role="link">Buy soon</a>
           <button class="btn ghost" type="button" data-goto="docs">How the hook works</button>
         </div>
       </div>
@@ -896,6 +896,14 @@
   // Live Rockies count and contract once the mint is set.
   if (CONFIG.mint) {
     document.getElementById('ca').textContent = CONFIG.mint;
+    document.getElementById('forge-status').textContent = 'The forge is open';
+    const buy = document.getElementById('buy');
+    buy.textContent = 'Buy $ROCK';
+    buy.href = `https://jup.ag/swap/SOL-${CONFIG.mint}`;
+    buy.target = '_blank';
+    buy.rel = 'noopener';
+    buy.removeAttribute('aria-disabled');
+    buy.removeAttribute('role');
     say('Connect your wallet or look up an address.');
     chain()
       .then(async (c) => {
