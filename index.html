@@ -704,8 +704,9 @@
   // ---------- live data: only once the mint is set at launch ----------
   const params = new URLSearchParams(location.search);
   const CONFIG = {
-    // Reads and claims go through this RPC; use a domain-restricted key on the live site.
-    rpc: params.get('rpc') || 'https://api.mainnet-beta.solana.com',
+    // Reads go through this RPC. On the live site that is /api/rpc, which keeps the RPC key server-side.
+    rpc: params.get('rpc')
+      || (/(^|\.)rockhook\.fun$|\.vercel\.app$/.test(location.hostname) ? `${location.origin}/api/rpc` : 'https://api.mainnet-beta.solana.com'),
     // The $ROCK mint, filled in at launch.
     mint: params.get('mint') || '',
     program: '342z5Sawvar7fcAiyt9J82ysEYs5rGaJp5wuH27Q9AAS',
@@ -840,6 +841,17 @@
     }
   }
 
+  /** Polls until the transaction is confirmed (the RPC proxy has no websocket for subscriptions). */
+  async function confirmed(conn, signature) {
+    for (let i = 0; i < 60; i++) {
+      const { value: [status] } = await conn.getSignatureStatuses([signature]);
+      if (status?.err) throw new Error('the transaction failed on-chain');
+      if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') return;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    throw new Error('it isn’t confirmed yet; check your wallet in a minute');
+  }
+
   async function claim(ticket, button) {
     button.disabled = true;
     button.textContent = 'Confirm in your wallet…';
@@ -847,7 +859,7 @@
       const tx = await buildClaimTx(ticket, connected.publicKey);
       const { signature } = await connected.provider.signAndSendTransaction(tx);
       button.textContent = 'Forging…';
-      await (await chain()).conn.confirmTransaction(signature, 'confirmed');
+      await confirmed((await chain()).conn, signature);
       await showRockies(ticket.wallet);
     } catch (e) {
       button.disabled = false;
