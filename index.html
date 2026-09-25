@@ -708,7 +708,7 @@
     rpc: params.get('rpc')
       || (/(^|\.)rockhook\.fun$|\.vercel\.app$/.test(location.hostname) ? `${location.origin}/api/rpc` : 'https://api.mainnet-beta.solana.com'),
     // The $ROCK mint, filled in at launch.
-    mint: params.get('mint') || '',
+    mint: params.get('mint') || 'BA8XQzWvLkvLXAYAKysK7VTinjKD1EQse5ZFcTBehook',
     program: '342z5Sawvar7fcAiyt9J82ysEYs5rGaJp5wuH27Q9AAS',
   };
   const CORE = 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d';
