@@ -38,7 +38,7 @@ pub(crate) fn handler(ctx: Context<Finalize>) -> Result<()> {
     require!(!ctx.accounts.rockies.graduated, HookError::AlreadyFinalized);
     require!(hook_removed(&ctx.accounts.mint)?, HookError::NotGraduated);
     let forge = &ctx.accounts.forge;
-    require!(forge.next_seq == ctx.accounts.ledger.load()?.head, HookError::CrankBehind);
+    require!(forge.caught_up(&*ctx.accounts.ledger.load()?), HookError::CrankBehind);
 
     let rockies = &mut ctx.accounts.rockies;
     rockies.graduated = true;
@@ -78,6 +78,11 @@ pub(crate) fn handler(ctx: Context<Finalize>) -> Result<()> {
     rockies.walk_next_number = 1;
     // Nothing left to draw from.
     rockies.random_done = rockies.draw_weight == 0;
+    rockies.winners = if rockies.has_tickets {
+        1 + (rockies.biggest_buy_seq != rockies.last_buy_seq) as u8 + (rockies.draw_weight > 0) as u8
+    } else {
+        0
+    };
     Ok(())
 }
 

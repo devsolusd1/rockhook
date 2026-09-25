@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{constants::*, error::HookError, state::*};
 
-/// If the ledger wrapped past unprocessed entries, jumps to the oldest entry
+/// If a ledger ring wrapped past unread entries, jumps to its oldest entry
 /// still readable and counts the rest as lost. Anyone can call it.
 #[derive(Accounts)]
 pub struct RecoverOverflow<'info> {
@@ -14,12 +14,19 @@ pub struct RecoverOverflow<'info> {
 }
 
 pub(crate) fn handler(ctx: Context<RecoverOverflow>) -> Result<()> {
-    let head = ctx.accounts.ledger.load()?.head;
+    let ledger = ctx.accounts.ledger.load()?;
     let forge = &mut ctx.accounts.forge;
-    let oldest = head.saturating_sub(LEDGER_CAPACITY as u64);
-    require!(forge.next_seq < oldest, HookError::NothingLost);
-    forge.lost += oldest - forge.next_seq;
-    forge.next_seq = oldest;
-    msg!("skipped {} lost ledger entries", forge.lost);
+    let oldest_buy = ledger.buy_count.saturating_sub(BUY_CAPACITY as u64);
+    let oldest_out = ledger.out_count.saturating_sub(OUT_CAPACITY as u64);
+    require!(forge.next_buy < oldest_buy || forge.next_out < oldest_out, HookError::NothingLost);
+    if forge.next_buy < oldest_buy {
+        forge.lost_buys += oldest_buy - forge.next_buy;
+        forge.next_buy = oldest_buy;
+    }
+    if forge.next_out < oldest_out {
+        forge.lost_outs += oldest_out - forge.next_out;
+        forge.next_out = oldest_out;
+    }
+    msg!("lost so far: {} buys, {} sells and sends", forge.lost_buys, forge.lost_outs);
     Ok(())
 }

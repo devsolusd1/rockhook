@@ -21,9 +21,7 @@ export const conn = new Connection('http://127.0.0.1:8899', 'confirmed');
 export const client = new dbc.DynamicBondingCurveClient(conn, 'confirmed');
 
 export const SUPPLY = 777, DECIMALS = 9, SOL_USD = 117;
-export const LEDGER_CAPACITY = 4096, ENTRY_SIZE = 104, LEDGER_SIZE = 8 + 32 + 8 + LEDGER_CAPACITY * ENTRY_SIZE;
-export const KIND = { BUY: 1, SELL: 2, TRANSFER: 3 };
-const KIND_NAME = { 1: 'BUY', 2: 'SELL', 3: 'TRANSFER' };
+export const { LEDGER_SIZE, KIND } = client_;
 export const TIER_NAMES = ['Ember', 'Flame', 'White-hot', 'Blue Flame', 'Plasma'];
 export const TIER_THRESHOLDS = [0.77, 1.77, 3.77, 7.77].map((r) => BigInt(Math.round(r * 1e9)));
 
@@ -62,25 +60,8 @@ export async function rockBalance(owner, mint) {
   try { return Number((await getAccount(conn, ataOf(owner, mint), 'confirmed', TOKEN_2022_PROGRAM_ID)).amount); } catch { return 0; }
 }
 
-export async function readLedger(ledger) {
-  const data = (await conn.getAccountInfo(ledger)).data;
-  const head = Number(data.readBigUInt64LE(40));
-  const entries = [];
-  for (let seq = Math.max(0, head - LEDGER_CAPACITY); seq < head; seq++) {
-    const o = 48 + (seq % LEDGER_CAPACITY) * ENTRY_SIZE;
-    entries.push({
-      seq: Number(data.readBigUInt64LE(o)),
-      slot: Number(data.readBigUInt64LE(o + 8)),
-      amount: data.readBigUInt64LE(o + 16),
-      value: data.readBigUInt64LE(o + 24),
-      from: new PublicKey(data.subarray(o + 32, o + 64)),
-      to: new PublicKey(data.subarray(o + 64, o + 96)),
-      kind: data[o + 96],
-      kindName: KIND_NAME[data[o + 96]],
-    });
-  }
-  return { head, entries };
-}
+/** Both rings: { head, buyCount, outCount, buyAt, outAt, entries } (see the client's decodeLedger). */
+export const readLedger = async (ledger) => client_.decodeLedger((await conn.getAccountInfo(ledger, 'confirmed')).data);
 
 // ---- PDAs --------------------------------------------------------------------
 export const pda = (...seeds) => PublicKey.findProgramAddressSync(seeds, HOOK)[0];
@@ -121,21 +102,7 @@ export const authorityPda = (mint) => pda(Buffer.from('authority'), mint.toBuffe
 export const collectionPda = (mint) => pda(Buffer.from('collection'), mint.toBuffer());
 export const rockyPda = (mint, seq) => pda(Buffer.from('rocky'), mint.toBuffer(), u64(seq));
 
-export async function readRockies(mint) {
-  const d = (await conn.getAccountInfo(rockiesPda(mint))).data;
-  let o = 8;
-  const pk = () => { const k = new PublicKey(d.subarray(o, o + 32)); o += 32; return k; };
-  const n64 = () => { const v = Number(d.readBigUInt64LE(o)); o += 8; return v; };
-  const big = () => { const v = d.readBigUInt64LE(o); o += 8; return v; };
-  const n32 = () => { const v = d.readUInt32LE(o); o += 4; return v; };
-  const bool = () => d[o++] === 1;
-  const str = () => { const len = d.readUInt32LE(o); o += 4; const s = d.subarray(o, o + len).toString(); o += len; return s; };
-  return {
-    mint: pk(), collection: pk(), uriBase: str(), graduated: bool(), litSnapshot: big(), drawWeight: big(), lastBuySeq: n64(), biggestBuySeq: n64(),
-    hasTickets: bool(), drawSlot: n64(), drawn: bool(), drawTarget: big(), walkNextNumber: n32(), walkCumulative: big(),
-    randomDone: bool(), randomWinnerSeq: n64(), thawed: bool(),
-  };
-}
+export const readRockies = (mint) => client_.read.rockies(conn, mint);
 /** Metaplex Core AssetV1: key, owner, update authority, name, uri. */
 export async function readAsset(asset) {
   const info = await conn.getAccountInfo(asset);
@@ -177,7 +144,7 @@ export const rockyIx = {
   }),
   crown: (payer, mint, seq) => new TransactionInstruction({
     programId: HOOK,
-    keys: [signer(payer), ro(rockiesPda(mint)), rw(ticketPda(mint, seq)), ro(authorityPda(mint)), ro(collectionPda(mint)),
+    keys: [signer(payer), rw(rockiesPda(mint)), rw(ticketPda(mint, seq)), ro(authorityPda(mint)), ro(collectionPda(mint)),
       rw(rockyPda(mint, seq)), ro(CORE), ro(SystemProgram.programId)],
     data: ixDisc('crown'),
   }),
@@ -198,7 +165,6 @@ export const rockyIx = {
 const ro = (pubkey) => ({ pubkey, isSigner: false, isWritable: false });
 const rw = (pubkey) => ({ pubkey, isSigner: false, isWritable: true });
 const signer = (pubkey, isWritable = true) => ({ pubkey, isSigner: true, isWritable });
-const vecPubkeys = (keys) => { const len = Buffer.alloc(4); len.writeUInt32LE(keys.length); return Buffer.concat([len, ...keys.map((k) => k.toBuffer())]); };
 
 export const ix = {
   initialize: (admin, mint, ledger, pool, baseVault, minBuyLamports) => new TransactionInstruction({
@@ -210,54 +176,27 @@ export const ix = {
     programId: HOOK, keys: [signer(admin, false), rw(statePda(mint))],
     data: Buffer.concat([ixDisc('set_paused'), Buffer.from([paused ? 1 : 0])]),
   }),
-  initForge: (admin, mint, thresholds, routers) => new TransactionInstruction({
-    programId: HOOK, keys: [signer(admin), ro(statePda(mint)), rw(forgePda(mint)), ro(SystemProgram.programId)],
-    data: Buffer.concat([ixDisc('init_forge'), ...thresholds.map(u64), vecPubkeys(routers)]),
-  }),
-  setRouters: (admin, mint, routers) => new TransactionInstruction({
-    programId: HOOK, keys: [signer(admin, false), ro(statePda(mint)), rw(forgePda(mint))],
-    data: Buffer.concat([ixDisc('set_routers'), vecPubkeys(routers)]),
-  }),
-  processBuy: (cranker, mint, ledger, seq, wallet) => new TransactionInstruction({
-    programId: HOOK,
-    keys: [signer(cranker), ro(statePda(mint)), rw(forgePda(mint)), ro(ledger), rw(holderPda(mint, wallet)), rw(ticketPda(mint, seq)), ro(SystemProgram.programId)],
-    data: Buffer.concat([ixDisc('process_buy'), wallet.toBuffer()]),
-  }),
-  processOut: (mint, ledger, wallet) => new TransactionInstruction({
-    programId: HOOK, keys: [ro(statePda(mint)), rw(forgePda(mint)), ro(ledger), rw(holderPda(mint, wallet))],
-    data: Buffer.concat([ixDisc('process_out'), wallet.toBuffer()]),
-  }),
-  processSkip: (mint, ledger) => new TransactionInstruction({
-    programId: HOOK, keys: [ro(statePda(mint)), rw(forgePda(mint)), ro(ledger)], data: ixDisc('process_skip'),
-  }),
+  initForge: (admin, mint, thresholds, routers) => client_.ix.initForge({ admin, mint, thresholds, routers }),
+  setRouters: (admin, mint, routers) => client_.ix.setRouters({ admin, mint, routers }),
+  processBuy: (cranker, mint, ledger, seq, wallet) => client_.ix.processBuy({ cranker, mint, ledger, seq, wallet }),
+  processOuts: (mint, ledger, wallets) => client_.ix.processOuts({ mint, ledger, wallets }),
+  processSkip: (mint, ledger) => client_.ix.processSkip({ mint, ledger }),
+  recoverOverflow: (mint, ledger) => client_.ix.recoverOverflow({ mint, ledger }),
 };
 
-/** The crank the forge bot runs: picks the right instruction for each unprocessed entry. */
+/** The crank the forge bot runs, a few steps per transaction; returns the number of steps sent. */
 export async function crank(cranker, mint, ledger, batch = 4) {
   let processed = 0;
   for (;;) {
     const forge = await readForge(mint);
-    const { head, entries } = await readLedger(ledger);
-    if (forge.nextSeq >= head) return processed;
-    const bySeq = new Map(entries.map((e) => [e.seq, e]));
-    const tx = new Transaction().add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }));
-    let seq = forge.nextSeq;
-    for (let n = 0; n < batch && seq < head; n++) {
-      const e = bySeq.get(seq);
-      const isRouter = forge.routers.some((r) => r.equals(e.to));
-      if (e.kind === KIND.BUY && isRouter) {
-        const next = bySeq.get(seq + 1);
-        const handoff = next && next.kind === KIND.TRANSFER && next.from.equals(e.to) && next.slot === e.slot;
-        if (handoff) { tx.add(ix.processBuy(cranker.publicKey, mint, ledger, seq, next.to)); seq += 2; }
-        else { tx.add(ix.processSkip(mint, ledger)); seq += 1; }
-      } else if (e.kind === KIND.BUY) {
-        tx.add(ix.processBuy(cranker.publicKey, mint, ledger, seq, e.to)); seq += 1;
-      } else {
-        tx.add(ix.processOut(mint, ledger, e.from)); seq += 1;
-      }
-      processed++;
-    }
-    await send(`crank from #${forge.nextSeq}`, tx, [cranker]);
+    const decoded = await readLedger(ledger);
+    if (client_.backlog(forge, decoded) === 0) return processed;
+    const { steps, recover } = client_.planCrank({ mint, ledger, cranker: cranker.publicKey, forge, decoded, max: batch });
+    const tx = new Transaction().add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }));
+    if (recover) tx.add(ix.recoverOverflow(mint, ledger));
+    else tx.add(...steps.map((s) => s.instruction));
+    await send(recover ? 'recover_overflow' : `crank ${steps.length} steps`, tx, [cranker]);
+    processed += recover ? 0 : steps.length;
   }
 }
 

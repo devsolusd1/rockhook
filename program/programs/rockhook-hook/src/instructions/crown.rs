@@ -9,7 +9,7 @@ use crate::{constants::*, error::HookError, state::*};
 pub struct Crown<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(seeds = [ROCKIES_SEED, rockies.mint.as_ref()], bump = rockies.bump)]
+    #[account(mut, seeds = [ROCKIES_SEED, rockies.mint.as_ref()], bump = rockies.bump)]
     pub rockies: Account<'info, Rockies>,
     #[account(
         mut,
@@ -55,5 +55,6 @@ pub(crate) fn handler(ctx: Context<Crown>) -> Result<()> {
     let ticket = &mut ctx.accounts.ticket;
     ticket.supernova = true;
     ticket.ashed = false;
+    ctx.accounts.rockies.crowned += 1;
     Ok(())
 }

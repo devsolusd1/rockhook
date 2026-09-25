@@ -8,15 +8,15 @@
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { ComputeBudgetProgram, Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
-import { ix, planCrank, read, supernovaBiggestSeq } from '../client/rockhook.mjs';
+import { backlog, ix, planCrank, read, supernovaBiggestSeq } from '../client/rockhook.mjs';
 
 // Each transaction is filled up to Solana's size limit (see `fit`); these are the ceilings.
 const CRANK_BATCH = 12;
 const MINT_BATCH = 8;
 const WALK_BATCH = 10;
 const TX_LIMIT = 1232;
-// Compute units reserved per instruction (measured locally, with headroom).
-const UNITS = { crank: 60_000, mint: 90_000, burn: 60_000, base: 30_000 };
+// Compute units reserved per instruction (measured locally, with headroom); crank steps carry their own.
+const UNITS = { mint: 90_000, burn: 60_000, base: 30_000 };
 const units = (per, n) => Math.min(1_400_000, UNITS.base + per * n);
 
 export function createForge({
@@ -64,12 +64,17 @@ export function createForge({
     ledger ??= (await read.state(conn, mint)).ledger;
     for (let round = 0; ; round++) {
       const forge = await read.forge(conn, mint);
-      const { head, entries } = await read.ledger(conn, ledger);
-      if (forge.nextSeq >= head || round === 50) return head - forge.nextSeq;
-      const { steps } = planCrank({ mint, ledger, cranker: payer.publicKey, forge, entries, head, max: CRANK_BATCH });
-      if (!steps.length) throw new Error(`ledger wrapped past entry ${forge.nextSeq}: call recover_overflow`);
-      const batch = fit(steps);
-      await send(`crank from #${forge.nextSeq} (${batch.length} steps)`, batch, units(UNITS.crank, batch.length));
+      const decoded = await read.ledger(conn, ledger);
+      const waiting = backlog(forge, decoded);
+      if (waiting === 0 || round === 50) return waiting;
+      const { steps, recover } = planCrank({ mint, ledger, cranker: payer.publicKey, forge, decoded, max: CRANK_BATCH });
+      if (recover) {
+        await send('recover_overflow: a ledger ring wrapped past unread entries', [ix.recoverOverflow({ mint, ledger })], 100_000);
+        continue;
+      }
+      const batch = steps.slice(0, fit(steps.map((s) => s.instruction)).length);
+      const limit = Math.min(1_400_000, UNITS.base + batch.reduce((sum, s) => sum + s.units, 0));
+      await send(`crank (${batch.length} steps, ${waiting} entries waiting)`, batch.map((s) => s.instruction), limit);
     }
   }
 
@@ -107,7 +112,7 @@ export function createForge({
     if (!rockies.graduated) {
       if (!(await read.hookRemoved(conn, mint))) return 'curve';
       const forge = await read.forge(conn, mint);
-      if (forge.nextSeq < (await read.ledger(conn, ledger)).head) return 'catching up';
+      if (backlog(forge, await read.ledger(conn, ledger)) > 0) return 'catching up';
       const biggestBuySeq = await supernovaBiggestSeq(conn, mint, forge);
       await send('finalize: graduation recorded', [ix.finalize({ mint, ledger, forge, biggestBuySeq })], 300_000);
       rockies = await read.rockies(conn, mint);

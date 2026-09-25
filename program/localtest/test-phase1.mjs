@@ -14,6 +14,7 @@ import {
 } from '@solana/spl-token';
 import * as dbc from '@meteora-ag/dynamic-bonding-curve-sdk';
 import { CpAmm } from '@meteora-ag/cp-amm-sdk';
+import { LEDGER_SIZE, decodeLedger } from '../client/rockhook.mjs';
 
 const HOOK = new PublicKey('342z5Sawvar7fcAiyt9J82ysEYs5rGaJp5wuH27Q9AAS');
 const SOL = new PublicKey('So11111111111111111111111111111111111111112');
@@ -22,8 +23,6 @@ const conn = new Connection('http://127.0.0.1:8899', 'confirmed');
 const client = new dbc.DynamicBondingCurveClient(conn, 'confirmed');
 
 const SUPPLY = 777, DECIMALS = 9, SOL_USD = 117;
-const LEDGER_CAPACITY = 4096, ENTRY_SIZE = 104, LEDGER_SIZE = 8 + 32 + 8 + LEDGER_CAPACITY * ENTRY_SIZE;
-const KIND = { 1: 'BUY', 2: 'SELL', 3: 'TRANSFER' };
 
 let failures = 0;
 const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failures++; };
@@ -49,22 +48,13 @@ async function fund(kp, sol) {
   await conn.confirmTransaction(sig, 'confirmed');
 }
 async function readLedger(ledger) {
-  const data = (await conn.getAccountInfo(ledger)).data;
-  const head = Number(data.readBigUInt64LE(40));
-  const entries = [];
-  for (let seq = Math.max(0, head - LEDGER_CAPACITY); seq < head; seq++) {
-    const o = 48 + (seq % LEDGER_CAPACITY) * ENTRY_SIZE;
-    entries.push({
-      seq: Number(data.readBigUInt64LE(o)),
-      slot: Number(data.readBigUInt64LE(o + 8)),
-      amount: Number(data.readBigUInt64LE(o + 16)) / 10 ** DECIMALS,
-      valueSol: Number(data.readBigUInt64LE(o + 24)) / LAMPORTS_PER_SOL,
-      from: new PublicKey(data.subarray(o + 32, o + 64)),
-      to: new PublicKey(data.subarray(o + 64, o + 96)),
-      kind: KIND[data[o + 96]] ?? data[o + 96],
-    });
-  }
-  return { head, entries };
+  const { head, entries } = decodeLedger((await conn.getAccountInfo(ledger, 'confirmed')).data);
+  return {
+    head,
+    entries: entries.map((e) => ({
+      ...e, kind: e.kindName, amount: Number(e.amount) / 10 ** DECIMALS, valueSol: Number(e.value) / LAMPORTS_PER_SOL,
+    })),
+  };
 }
 const ataOf = (owner, mint) => getAssociatedTokenAddressSync(mint, owner, false, TOKEN_2022_PROGRAM_ID);
 async function rockBalance(owner, mint) {
@@ -224,14 +214,14 @@ await setPaused(false);
   const { head, entries } = await readLedger(ledgerKp.publicKey);
   console.log(`\nledger head ${head}`);
   for (const e of entries.slice(before)) {
-    console.log(`  #${e.seq} ${e.kind.padEnd(8)} ${e.amount.toFixed(4).padStart(9)} ROCK  value ${e.valueSol.toFixed(4)} SOL  from ${short(e.from)} to ${short(e.to)}`);
+    console.log(`  #${e.seq} ${e.kind.padEnd(8)} ${e.amount.toFixed(4).padStart(9)} ROCK  value ${e.valueSol.toFixed(4)} SOL  from ${short(e.from)}${e.to ? ` to ${short(e.to)}` : ''}`);
   }
   const kinds = entries.slice(before).map((e) => e.kind).join(',');
   check(kinds === 'BUY,TRANSFER,SELL', `recorded BUY (A), TRANSFER (A->C), SELL (A); skipped B's small buy [${kinds}]`);
   const buyEntry = entries[before];
   check(buyEntry.to.equals(A.publicKey) && buyEntry.valueSol > 0.9 && buyEntry.valueSol < 1.05, `buy credited to A's wallet, valued ${buyEntry.valueSol.toFixed(4)} SOL`);
   const tr = entries[before + 1];
-  check(tr.from.equals(A.publicKey) && tr.to.equals(C.publicKey), 'transfer recorded from A to C');
+  check(tr.from.equals(A.publicKey) && tr.to === null, 'the send is recorded from A, in the out ring');
 }
 
 // 8. Graduation: fill the curve, check the hook is removed, migrate, trade on DAMM v2.

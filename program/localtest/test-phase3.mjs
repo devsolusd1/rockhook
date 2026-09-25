@@ -3,7 +3,7 @@
 import {
   Keypair, Transaction, ComputeBudgetProgram, check, finish, fund, launch, buy, sell, transferIxs, send, sendExpectError,
   ix, rockyIx, crank, readForge, readHolder, readTicket, readRockies, readAsset, readLedger, rock, short,
-  collectionPda, rockyPda, ticketPda, holderPda, conn, TIER_THRESHOLDS, dbc,
+  collectionPda, rockyPda, ticketPda, holderPda, conn, TIER_THRESHOLDS, dbc, KIND,
 } from './lib.mjs';
 
 const URI_BASE = 'https://rockhook.fun/nft/meta/';
@@ -25,9 +25,8 @@ check(!!(await conn.getAccountInfo(collection)), `Rockies collection created at 
 /** What the forge bot does: crank, then mint every ticket not minted yet, then burn out whoever sold. */
 async function forgeRound() {
   await crank(bot, mint, ledger);
-  const forge = await readForge(mint);
   const { entries } = await readLedger(ledger);
-  for (const e of entries.filter((x) => x.seq < forge.nextSeq)) {
+  for (const e of entries.filter((x) => x.kind === KIND.BUY)) {
     const t = await readTicket(mint, e.seq);
     if (!t) continue;
     if (!t.minted) await send(`mint rocky seq ${e.seq}`, new Transaction().add(cu(300_000), rockyIx.mint(bot.publicKey, mint, e.seq, t.wallet)), [bot]);
@@ -130,6 +129,8 @@ check(rockies.drawWeight < rockies.litSnapshot, `the draw leaves out those two: 
 {
   const winners = [...new Set([rockies.lastBuySeq, rockies.biggestBuySeq, rockies.randomWinnerSeq])];
   check(winners.length === 3, `three different Supernovas: seqs ${winners.join(', ')}`);
+  const early = await sendExpectError('thaw before crowning', new Transaction().add(cu(300_000), rockyIx.thaw(bot.publicKey, mint)), [bot]);
+  check(/NotCrowned/.test(early ?? ''), 'the collection can\'t thaw before every Supernova is crowned');
   for (const seq of winners) await send(`crown seq ${seq}`, new Transaction().add(cu(300_000), rockyIx.crown(bot.publicKey, mint, seq)), [bot]);
   for (const seq of winners) {
     const a = await readAsset(rockyPda(mint, seq));

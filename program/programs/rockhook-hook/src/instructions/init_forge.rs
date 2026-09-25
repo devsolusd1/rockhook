@@ -6,7 +6,7 @@ use crate::{constants::*, state::*};
 pub struct InitForge<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
-    #[account(seeds = [STATE_SEED, state.mint.as_ref()], bump = state.bump, has_one = admin)]
+    #[account(mut, seeds = [STATE_SEED, state.mint.as_ref()], bump = state.bump, has_one = admin)]
     pub state: Account<'info, HookState>,
     #[account(
         init,
@@ -20,10 +20,10 @@ pub struct InitForge<'info> {
 }
 
 pub(crate) fn handler(ctx: Context<InitForge>, tier_thresholds: [u64; 4], routers: Vec<Pubkey>) -> Result<()> {
+    ctx.accounts.state.routers = HookState::routers_from(&routers)?;
     let forge = &mut ctx.accounts.forge;
     forge.mint = ctx.accounts.state.mint;
     forge.tier_thresholds = tier_thresholds;
-    forge.routers = Forge::routers_from(&routers)?;
     forge.bump = ctx.bumps.forge;
     Ok(())
 }

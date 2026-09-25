@@ -10,7 +10,7 @@ pub enum HookError {
     EntryNotWritten,
     #[msg("That ledger entry was overwritten before it was processed; call recover_overflow")]
     EntryLost,
-    #[msg("The next ledger entry is a different kind; use the matching process instruction")]
+    #[msg("The next ledger entry in seq order is a different kind; use the matching process instruction")]
     WrongEntryKind,
     #[msg("The wallet does not match the ledger entry")]
     WrongWallet,
@@ -56,4 +56,12 @@ pub enum HookError {
     AlreadyThawed,
     #[msg("uri_base is too long")]
     UriTooLong,
+    #[msg("That is not the seq of the next buy")]
+    WrongSeq,
+    #[msg("Pass each sender's holder account, once per wallet")]
+    WrongHolder,
+    #[msg("Nothing to process")]
+    NothingToProcess,
+    #[msg("Draw and crown every Supernova first")]
+    NotCrowned,
 }

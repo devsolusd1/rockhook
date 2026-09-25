@@ -2,8 +2,9 @@ use anchor_lang::prelude::*;
 
 use crate::{constants::*, error::HookError, state::*};
 
-/// Skips the next ledger entry when it is a router buy the router kept (no
-/// hand-off in the same transaction): there is no user wallet to credit.
+/// Skips the next buy-ring entry when there is no user wallet to credit: a
+/// router buy the router kept (no hand-off in the same slot), or a hand-off
+/// with no router buy before it.
 #[derive(Accounts)]
 pub struct ProcessSkip<'info> {
     #[account(seeds = [STATE_SEED, state.mint.as_ref()], bump = state.bump, has_one = ledger)]
@@ -14,13 +15,15 @@ pub struct ProcessSkip<'info> {
 }
 
 pub(crate) fn handler(ctx: Context<ProcessSkip>) -> Result<()> {
-    let seq = ctx.accounts.forge.next_seq;
+    let index = ctx.accounts.forge.next_buy;
     let ledger = ctx.accounts.ledger.load()?;
-    let entry = ledger.entry(seq)?;
-    let skippable = entry.kind == KIND_BUY
-        && ctx.accounts.forge.is_router(&entry.to)
-        && handoff(&ledger, &entry).is_none();
+    let entry = ledger.buy(index)?;
+    let skippable = match entry.kind {
+        KIND_ROUTER_BUY => handoff(&ledger, index, &entry).is_none(),
+        KIND_HANDOFF => true,
+        _ => false,
+    };
     require!(skippable, HookError::NotSkippable);
-    ctx.accounts.forge.next_seq = seq + 1;
+    ctx.accounts.forge.next_buy = index + 1;
     Ok(())
 }

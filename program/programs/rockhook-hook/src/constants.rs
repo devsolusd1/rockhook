@@ -39,13 +39,21 @@ pub const MAX_ROUTERS: usize = 4;
 /// Seed Token-2022 uses to find a hook's extra-account list.
 pub const EXTRA_ACCOUNT_METAS_SEED: &[u8] = b"extra-account-metas";
 
-/// Ledger entry kinds.
+/// Ledger entry kinds. Buys, router buys and hand-offs go to the buy ring;
+/// sells and sends go to the out ring.
 pub const KIND_BUY: u8 = 1;
 pub const KIND_SELL: u8 = 2;
 pub const KIND_TRANSFER: u8 = 3;
+/// A router passing tokens it just bought on to the user.
+pub const KIND_HANDOFF: u8 = 4;
+/// A buy that landed on a router account, to be credited to whoever it hands off to.
+pub const KIND_ROUTER_BUY: u8 = 5;
 
-/// How many entries the ledger ring holds before it wraps.
-pub const LEDGER_CAPACITY: usize = 4096;
+/// Unread entries each ledger ring holds before it wraps. Buys (worth at least
+/// the minimum each) have their own ring, so a flood of cheap sends can never
+/// push a buy out.
+pub const BUY_CAPACITY: usize = 2048;
+pub const OUT_CAPACITY: usize = 4096;
 
 /// Meteora Dynamic Bonding Curve program.
 pub const DBC_PROGRAM_ID: Pubkey = pubkey!("dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN");

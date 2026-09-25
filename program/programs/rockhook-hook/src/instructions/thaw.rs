@@ -30,6 +30,9 @@ pub(crate) fn handler(ctx: Context<Thaw>) -> Result<()> {
     let rockies = &ctx.accounts.rockies;
     require!(rockies.graduated, HookError::NotGraduated);
     require!(!rockies.thawed, HookError::AlreadyThawed);
+    // Winners are known before they are crowned: keep every Rocky frozen until
+    // they all show as Supernovas, so nobody can buy one off an unaware owner.
+    require!(rockies.random_done && rockies.crowned == rockies.winners, HookError::NotCrowned);
 
     let mint = rockies.mint;
     let authority_seeds: &[&[u8]] = &[AUTHORITY_SEED, mint.as_ref(), &[rockies.authority_bump]];

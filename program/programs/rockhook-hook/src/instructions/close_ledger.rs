@@ -20,6 +20,6 @@ pub struct CloseLedger<'info> {
 
 pub(crate) fn handler(ctx: Context<CloseLedger>) -> Result<()> {
     require!(ctx.accounts.rockies.graduated, HookError::NotGraduated);
-    require!(ctx.accounts.forge.next_seq == ctx.accounts.ledger.load()?.head, HookError::CrankBehind);
+    require!(ctx.accounts.forge.caught_up(&*ctx.accounts.ledger.load()?), HookError::CrankBehind);
     Ok(())
 }

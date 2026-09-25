@@ -41,34 +41,26 @@ pub(crate) fn handler(ctx: Context<TransferHook>, amount: u64) -> Result<()> {
         return Ok(());
     }
 
-    let source = ctx.accounts.source_token.key();
-    let destination = ctx.accounts.destination_token.key();
-    let (kind, value_lamports) = if source == state.base_vault {
+    let from = token_owner(&ctx.accounts.source_token)?;
+    let to = token_owner(&ctx.accounts.destination_token)?;
+    let buy = |kind, value_lamports| -> Result<Entry> {
+        Ok(Entry { seq: 0, slot: Clock::get()?.slot, amount, value_lamports, from, to, kind, padding: [0; 7] })
+    };
+    let mut ledger = ctx.accounts.ledger.load_mut()?;
+    if ctx.accounts.source_token.key() == state.base_vault {
         let value = value_in_lamports(&ctx.accounts.dbc_pool, amount).unwrap_or(0);
         if value < state.min_buy_lamports {
             return Ok(());
         }
-        (KIND_BUY, value)
-    } else if destination == state.base_vault {
-        (KIND_SELL, 0)
+        let kind = if state.is_router(&to) { KIND_ROUTER_BUY } else { KIND_BUY };
+        ledger.push_buy(buy(kind, value)?);
+    } else if ctx.accounts.destination_token.key() == state.base_vault {
+        ledger.push_out(from, KIND_SELL);
+    } else if state.is_router(&from) {
+        ledger.push_buy(buy(KIND_HANDOFF, 0)?);
     } else {
-        (KIND_TRANSFER, 0)
-    };
-
-    let entry = Entry {
-        seq: 0,
-        slot: Clock::get()?.slot,
-        amount,
-        value_lamports,
-        from: token_owner(&ctx.accounts.source_token)?,
-        to: token_owner(&ctx.accounts.destination_token)?,
-        kind,
-        padding: [0; 7],
-    };
-    let mut ledger = ctx.accounts.ledger.load_mut()?;
-    let seq = ledger.head;
-    ledger.entries[(seq % LEDGER_CAPACITY as u64) as usize] = Entry { seq, ..entry };
-    ledger.head = seq + 1;
+        ledger.push_out(from, KIND_TRANSFER);
+    }
     Ok(())
 }
 

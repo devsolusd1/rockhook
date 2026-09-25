@@ -42,16 +42,10 @@ pub(crate) fn handler(ctx: Context<MintRocky>) -> Result<()> {
     let ticket = &ctx.accounts.ticket;
     require!(!ticket.minted, HookError::AlreadyMinted);
 
+    // A winner is minted like any other Rocky; `crown` turns it into a Supernova.
     let burnt = ctx.accounts.holder.burn_before_seq > ticket.seq;
-    let supernova = rockies.graduated && rockies.is_winner(ticket.seq);
-    let slug = if supernova {
-        SLUG_SUPERNOVA
-    } else if burnt {
-        SLUG_BURNT_OUT
-    } else {
-        TIER_SLUGS[ticket.tier as usize]
-    };
-    let name = if supernova { format!("Supernova #{}", ticket.number) } else { format!("Rocky #{}", ticket.number) };
+    let slug = if burnt { SLUG_BURNT_OUT } else { TIER_SLUGS[ticket.tier as usize] };
+    let name = format!("Rocky #{}", ticket.number);
 
     let mint = rockies.mint;
     let seq = ticket.seq.to_le_bytes();
@@ -70,7 +64,6 @@ pub(crate) fn handler(ctx: Context<MintRocky>) -> Result<()> {
 
     let ticket = &mut ctx.accounts.ticket;
     ticket.minted = true;
-    ticket.supernova = supernova;
-    ticket.ashed = burnt && !supernova;
+    ticket.ashed = burnt;
     Ok(())
 }

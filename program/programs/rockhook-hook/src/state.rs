@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::{LEDGER_CAPACITY, MAX_ROUTERS};
+use crate::constants::{BUY_CAPACITY, KIND_HANDOFF, MAX_ROUTERS, OUT_CAPACITY};
+use crate::error::HookError;
 
 /// One per mint: where the hook looks for the curve and where it writes.
 #[account]
@@ -18,12 +19,27 @@ pub struct HookState {
     /// Kill switch: while set, the hook records nothing and never gets in the way of a trade.
     pub paused: bool,
     pub bump: u8,
+    /// Aggregator accounts that buy on a user's behalf and pass the tokens on.
+    pub routers: [Pubkey; MAX_ROUTERS],
 }
 
-/// One recorded transfer.
+impl HookState {
+    pub fn is_router(&self, key: &Pubkey) -> bool {
+        *key != Pubkey::default() && self.routers.contains(key)
+    }
+
+    pub fn routers_from(routers: &[Pubkey]) -> Result<[Pubkey; MAX_ROUTERS]> {
+        require!(routers.len() <= MAX_ROUTERS, HookError::TooManyRouters);
+        let mut out = [Pubkey::default(); MAX_ROUTERS];
+        out[..routers.len()].copy_from_slice(routers);
+        Ok(out)
+    }
+}
+
+/// A buy, a router buy, or a router's hand-off of one.
 #[zero_copy]
 pub struct Entry {
-    /// Position in the ledger since it was created; never reused.
+    /// Position in the ledger since it was created, shared by both rings; never reused.
     pub seq: u64,
     pub slot: u64,
     /// $ROCK moved, in base units.
@@ -38,22 +54,73 @@ pub struct Entry {
     pub padding: [u8; 7],
 }
 
-/// Ring buffer of entries. The hook only appends; a crank reads entries out
-/// before they are overwritten.
+/// A sell or a send: all the forge needs is who sent it, and when.
+#[zero_copy]
+pub struct OutEntry {
+    pub seq: u64,
+    pub from: Pubkey,
+    pub kind: u8,
+    pub padding: [u8; 7],
+}
+
+/// Two ring buffers sharing one sequence: buys (with router hand-offs), and
+/// sells and sends. The hook only appends; the crank reads both out in `seq`
+/// order before they are overwritten.
 #[account(zero_copy)]
 pub struct Ledger {
     pub state: Pubkey,
-    /// Number of entries ever written; the next entry gets this `seq`.
+    /// Entries ever written to either ring; the next one gets this `seq`.
     pub head: u64,
-    pub entries: [Entry; LEDGER_CAPACITY],
+    /// Entries ever written to each ring.
+    pub buy_count: u64,
+    pub out_count: u64,
+    pub buys: [Entry; BUY_CAPACITY],
+    pub outs: [OutEntry; OUT_CAPACITY],
 }
 
 impl Ledger {
-    /// The entry with this `seq`, if it was written and not overwritten since.
-    pub fn entry(&self, seq: u64) -> Result<Entry> {
-        require!(seq < self.head, crate::error::HookError::EntryNotWritten);
-        require!(self.head - seq <= LEDGER_CAPACITY as u64, crate::error::HookError::EntryLost);
-        Ok(self.entries[(seq % LEDGER_CAPACITY as u64) as usize])
+    /// The buy-ring entry at this position, if it was written and not overwritten since.
+    pub fn buy(&self, index: u64) -> Result<Entry> {
+        require!(index < self.buy_count, HookError::EntryNotWritten);
+        require!(self.buy_count - index <= BUY_CAPACITY as u64, HookError::EntryLost);
+        Ok(self.buys[(index % BUY_CAPACITY as u64) as usize])
+    }
+
+    /// The out-ring entry at this position, if it was written and not overwritten since.
+    pub fn out(&self, index: u64) -> Result<OutEntry> {
+        require!(index < self.out_count, HookError::EntryNotWritten);
+        require!(self.out_count - index <= OUT_CAPACITY as u64, HookError::EntryLost);
+        Ok(self.outs[(index % OUT_CAPACITY as u64) as usize])
+    }
+
+    /// `seq` of the buy-ring entry at `index`, or `None` if nothing is written there yet.
+    pub fn buy_seq(&self, index: u64) -> Result<Option<u64>> {
+        if index == self.buy_count {
+            return Ok(None);
+        }
+        Ok(Some(self.buy(index)?.seq))
+    }
+
+    /// `seq` of the out-ring entry at `index`, or `None` if nothing is written there yet.
+    pub fn out_seq(&self, index: u64) -> Result<Option<u64>> {
+        if index == self.out_count {
+            return Ok(None);
+        }
+        Ok(Some(self.out(index)?.seq))
+    }
+
+    pub fn push_buy(&mut self, entry: Entry) {
+        let seq = self.head;
+        self.buys[(self.buy_count % BUY_CAPACITY as u64) as usize] = Entry { seq, ..entry };
+        self.buy_count += 1;
+        self.head = seq + 1;
+    }
+
+    pub fn push_out(&mut self, from: Pubkey, kind: u8) {
+        let seq = self.head;
+        self.outs[(self.out_count % OUT_CAPACITY as u64) as usize] = OutEntry { seq, from, kind, padding: [0; 7] };
+        self.out_count += 1;
+        self.head = seq + 1;
     }
 }
 
@@ -62,11 +129,13 @@ impl Ledger {
 #[derive(InitSpace)]
 pub struct Forge {
     pub mint: Pubkey,
-    /// Next ledger `seq` to process.
-    pub next_seq: u64,
-    /// Entries overwritten before they were processed (should stay 0).
-    pub lost: u64,
+    /// Next position to read in each ledger ring.
+    pub next_buy: u64,
+    pub next_out: u64,
     pub tickets: u32,
+    /// Entries overwritten before they were read (should stay 0).
+    pub lost_buys: u64,
+    pub lost_outs: u64,
     /// Sum of the $ROCK of every ticket.
     pub total_weight: u64,
     /// Sum of the $ROCK of tickets whose wallet hasn't sold or sent since.
@@ -83,7 +152,6 @@ pub struct Forge {
     pub last_buy_wallet: Pubkey,
     /// Base units at which each tier starts: Flame, White-hot, Blue Flame, Plasma.
     pub tier_thresholds: [u64; 4],
-    pub routers: [Pubkey; MAX_ROUTERS],
     pub bump: u8,
 }
 
@@ -111,23 +179,17 @@ impl Forge {
         }
     }
 
-    pub fn is_router(&self, key: &Pubkey) -> bool {
-        *key != Pubkey::default() && self.routers.contains(key)
-    }
-
-    pub fn routers_from(routers: &[Pubkey]) -> Result<[Pubkey; MAX_ROUTERS]> {
-        require!(routers.len() <= MAX_ROUTERS, crate::error::HookError::TooManyRouters);
-        let mut out = [Pubkey::default(); MAX_ROUTERS];
-        out[..routers.len()].copy_from_slice(routers);
-        Ok(out)
+    /// True once both ledger rings are read to the end.
+    pub fn caught_up(&self, ledger: &Ledger) -> bool {
+        self.next_buy == ledger.buy_count && self.next_out == ledger.out_count
     }
 }
 
-/// A router buy is handed off when the router sends the tokens on in the same
-/// transaction: the very next entry is a transfer out of the router, same slot.
-pub fn handoff(ledger: &Ledger, buy: &Entry) -> Option<Entry> {
-    let next = ledger.entry(buy.seq + 1).ok()?;
-    (next.kind == crate::constants::KIND_TRANSFER && next.from == buy.to && next.slot == buy.slot).then_some(next)
+/// A router buy is handed off when the router passes the tokens on in the same
+/// slot: the next buy-ring entry is that hand-off.
+pub fn handoff(ledger: &Ledger, index: u64, buy: &Entry) -> Option<Entry> {
+    let next = ledger.buy(index + 1).ok()?;
+    (next.kind == KIND_HANDOFF && next.from == buy.to && next.slot == buy.slot).then_some(next)
 }
 
 /// One per wallet that ever got a ticket.
@@ -199,6 +261,10 @@ pub struct Rockies {
     pub random_done: bool,
     pub random_winner_seq: u64,
     pub thawed: bool,
+    /// Supernovas to crown (0 to 3) and how many are crowned; the collection
+    /// thaws only once they all are, so nobody can trade a winner before it shows.
+    pub winners: u8,
+    pub crowned: u8,
     pub bump: u8,
     pub authority_bump: u8,
     pub collection_bump: u8,

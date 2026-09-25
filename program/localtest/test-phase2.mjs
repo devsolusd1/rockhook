@@ -32,15 +32,17 @@ await buy(E, pool, 4, 'E buys 4 SOL');                                   // #9 B
 
 const { head, entries } = await readLedger(ledger);
 console.log(`\nledger (${head} entries)`);
-for (const e of entries) console.log(`  #${e.seq} ${e.kindName.padEnd(8)} ${rock(e.amount).toFixed(4).padStart(8)} ROCK  from ${nameOf(e.from).padEnd(7)} to ${nameOf(e.to)}`);
+for (const e of entries) console.log(`  #${e.seq} ${e.kindName.padEnd(8)} ${rock(e.amount).toFixed(4).padStart(8)} ROCK  from ${nameOf(e.from).padEnd(7)} ${e.to ? `to ${nameOf(e.to)}` : ''}`);
 check(head === 10, `10 entries recorded (got ${head})`);
 
 // ---- The program refuses a wrong crank ------------------------------------------
 {
   let err = await sendExpectError('wrong wallet', new Transaction().add(ix.processBuy(cranker.publicKey, mint, ledger, 0, B.publicKey)), [cranker]);
   check(/WrongWallet/.test(err ?? ''), 'process_buy crediting the wrong wallet is rejected');
-  err = await sendExpectError('wrong kind', new Transaction().add(ix.processOut(mint, ledger, A.publicKey)), [cranker]);
-  check(/WrongEntryKind/.test(err ?? ''), 'process_out on a buy entry is rejected');
+  err = await sendExpectError('wrong seq', new Transaction().add(ix.processBuy(cranker.publicKey, mint, ledger, 1, A.publicKey)), [cranker]);
+  check(/WrongSeq/.test(err ?? ''), 'process_buy for a buy that is not next is rejected');
+  err = await sendExpectError('wrong kind', new Transaction().add(ix.processOuts(mint, ledger, [A.publicKey])), [cranker]);
+  check(/WrongEntryKind/.test(err ?? ''), 'process_outs while a buy comes first is rejected');
   err = await sendExpectError('skip a normal buy', new Transaction().add(ix.processSkip(mint, ledger)), [cranker]);
   check(/NotSkippable/.test(err ?? ''), 'process_skip on a normal buy is rejected');
 }
@@ -48,7 +50,9 @@ check(head === 10, `10 entries recorded (got ${head})`);
 // ---- Crank everything -------------------------------------------------------------
 const processed = await crank(cranker, mint, ledger);
 const forge = await readForge(mint);
-check(forge.nextSeq === head, `crank processed all ${processed} steps (next seq ${forge.nextSeq})`);
+const rings = await readLedger(ledger);
+check(forge.nextBuy === rings.buyCount && forge.nextOut === rings.outCount,
+  `crank read both rings to the end in ${processed} steps (${rings.buyCount} buy-ring and ${rings.outCount} out-ring entries)`);
 check(forge.tickets === 6, `6 tickets: A x3, C, D, E (got ${forge.tickets})`);
 
 console.log('\ntickets');

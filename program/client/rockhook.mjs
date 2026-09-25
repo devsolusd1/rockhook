@@ -7,12 +7,16 @@ export const PROGRAM_ID = new PublicKey('342z5Sawvar7fcAiyt9J82ysEYs5rGaJp5wuH27
 export const CORE_PROGRAM_ID = new PublicKey('CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d');
 export const SLOT_HASHES = new PublicKey('SysvarS1otHashes111111111111111111111111111');
 
-export const LEDGER_CAPACITY = 4096;
+// The ledger: a buy ring (buys, router buys, hand-offs) and an out ring (sells, sends).
+export const BUY_CAPACITY = 2048;
+export const OUT_CAPACITY = 4096;
 export const ENTRY_SIZE = 104;
-export const LEDGER_SIZE = 8 + 32 + 8 + LEDGER_CAPACITY * ENTRY_SIZE;
+export const OUT_ENTRY_SIZE = 48;
+const LEDGER_HEADER = 8 + 32 + 8 * 3;
+export const LEDGER_SIZE = LEDGER_HEADER + BUY_CAPACITY * ENTRY_SIZE + OUT_CAPACITY * OUT_ENTRY_SIZE;
 export const TICKET_SIZE = 81;
-export const KIND = { BUY: 1, SELL: 2, TRANSFER: 3 };
-export const KIND_NAME = { 1: 'BUY', 2: 'SELL', 3: 'TRANSFER' };
+export const KIND = { BUY: 1, SELL: 2, TRANSFER: 3, HANDOFF: 4, ROUTER_BUY: 5 };
+export const KIND_NAME = { 1: 'BUY', 2: 'SELL', 3: 'TRANSFER', 4: 'HANDOFF', 5: 'ROUTER_BUY' };
 export const TIER_NAMES = ['Ember', 'Flame', 'White-hot', 'Blue Flame', 'Plasma'];
 
 // ---- encoding ------------------------------------------------------------------------
@@ -60,30 +64,56 @@ async function data(conn, key) {
 
 export function decodeState(d) {
   const c = cursor(d);
-  return { admin: c.pk(), mint: c.pk(), dbcPool: c.pk(), baseVault: c.pk(), ledger: c.pk(), minBuyLamports: c.u64(), paused: c.bool() };
+  return {
+    admin: c.pk(), mint: c.pk(), dbcPool: c.pk(), baseVault: c.pk(), ledger: c.pk(), minBuyLamports: c.u64(), paused: c.bool(),
+    bump: c.u8(), routers: [c.pk(), c.pk(), c.pk(), c.pk()],
+  };
 }
+/**
+ * Both ledger rings. `buyAt(i)` / `outAt(i)` give the entry at a ring position, or
+ * null if it isn't written yet or was overwritten; `entries` is every readable
+ * entry of both rings in `seq` order (outs have no `to`, `amount` or `slot`).
+ */
 export function decodeLedger(d) {
   const head = Number(d.readBigUInt64LE(40));
-  const entries = [];
-  for (let seq = Math.max(0, head - LEDGER_CAPACITY); seq < head; seq++) {
-    const o = 48 + (seq % LEDGER_CAPACITY) * ENTRY_SIZE;
-    entries.push({
-      seq: Number(d.readBigUInt64LE(o)), slot: Number(d.readBigUInt64LE(o + 8)),
+  const buyCount = Number(d.readBigUInt64LE(48));
+  const outCount = Number(d.readBigUInt64LE(56));
+  const outsStart = LEDGER_HEADER + BUY_CAPACITY * ENTRY_SIZE;
+  const buyAt = (i) => {
+    if (i >= buyCount || buyCount - i > BUY_CAPACITY) return null;
+    const o = LEDGER_HEADER + (i % BUY_CAPACITY) * ENTRY_SIZE;
+    return {
+      index: i, seq: Number(d.readBigUInt64LE(o)), slot: Number(d.readBigUInt64LE(o + 8)),
       amount: d.readBigUInt64LE(o + 16), value: d.readBigUInt64LE(o + 24),
       from: new PublicKey(d.subarray(o + 32, o + 64)), to: new PublicKey(d.subarray(o + 64, o + 96)),
       kind: d[o + 96], kindName: KIND_NAME[d[o + 96]],
-    });
-  }
-  return { head, entries };
+    };
+  };
+  const outAt = (i) => {
+    if (i >= outCount || outCount - i > OUT_CAPACITY) return null;
+    const o = outsStart + (i % OUT_CAPACITY) * OUT_ENTRY_SIZE;
+    return {
+      index: i, seq: Number(d.readBigUInt64LE(o)), from: new PublicKey(d.subarray(o + 8, o + 40)),
+      kind: d[o + 40], kindName: KIND_NAME[d[o + 40]], to: null, amount: 0n, value: 0n, slot: null,
+    };
+  };
+  const entries = [];
+  for (let i = Math.max(0, buyCount - BUY_CAPACITY); i < buyCount; i++) entries.push(buyAt(i));
+  for (let i = Math.max(0, outCount - OUT_CAPACITY); i < outCount; i++) entries.push(outAt(i));
+  entries.sort((a, b) => a.seq - b.seq);
+  return { head, buyCount, outCount, buyAt, outAt, entries };
 }
 export function decodeForge(d) {
   const c = cursor(d);
   return {
-    mint: c.pk(), nextSeq: c.num(), lost: c.num(), tickets: c.u32(), totalWeight: c.u64(), litWeight: c.u64(),
+    mint: c.pk(), nextBuy: c.num(), nextOut: c.num(), tickets: c.u32(), lostBuys: c.num(), lostOuts: c.num(),
+    totalWeight: c.u64(), litWeight: c.u64(),
     biggestWallet: c.pk(), biggestTotal: c.u64(), secondWallet: c.pk(), secondTotal: c.u64(), lastBuySeq: c.num(), lastBuyWallet: c.pk(),
-    thresholds: [c.u64(), c.u64(), c.u64(), c.u64()], routers: [c.pk(), c.pk(), c.pk(), c.pk()],
+    thresholds: [c.u64(), c.u64(), c.u64(), c.u64()],
   };
 }
+/** Ledger entries the forge hasn't read yet, across both rings. */
+export const backlog = (forge, ledger) => (ledger.buyCount - forge.nextBuy) + (ledger.outCount - forge.nextOut);
 export function decodeHolder(d) {
   const c = cursor(d);
   return {
@@ -104,6 +134,7 @@ export function decodeRockies(d) {
     mint: c.pk(), collection: c.pk(), uriBase: c.str(), graduated: c.bool(), litSnapshot: c.u64(), drawWeight: c.u64(),
     lastBuySeq: c.num(), biggestBuySeq: c.num(), hasTickets: c.bool(), drawSlot: c.num(), drawn: c.bool(), drawTarget: c.u64(),
     walkNextNumber: c.u32(), walkCumulative: c.u64(), randomDone: c.bool(), randomWinnerSeq: c.num(), thawed: c.bool(),
+    winners: c.u8(), crowned: c.u8(),
   };
 }
 /** Metaplex Core AssetV1: key, owner, update authority, name, uri. */
@@ -160,21 +191,31 @@ export const ix = {
     [signer(admin, false), rw(pdas.state(mint))], Buffer.concat([disc('set_paused'), Buffer.from([paused ? 1 : 0])]),
   ),
   initForge: ({ admin, mint, thresholds, routers = [] }) => instruction(
-    [signer(admin), ro(pdas.state(mint)), rw(pdas.forge(mint)), ro(SystemProgram.programId)],
+    [signer(admin), rw(pdas.state(mint)), rw(pdas.forge(mint)), ro(SystemProgram.programId)],
     Buffer.concat([disc('init_forge'), ...thresholds.map(u64), pubkeys(routers)]),
   ),
   setRouters: ({ admin, mint, routers }) => instruction(
-    [signer(admin, false), ro(pdas.state(mint)), rw(pdas.forge(mint))], Buffer.concat([disc('set_routers'), pubkeys(routers)]),
+    [signer(admin, false), rw(pdas.state(mint))], Buffer.concat([disc('set_routers'), pubkeys(routers)]),
   ),
+  /** `seq`: the buy's ledger seq; `wallet`: who gets the ticket (the hand-off's receiver for a router buy). */
   processBuy: ({ cranker, mint, ledger, seq, wallet }) => instruction(
     [signer(cranker), ro(pdas.state(mint)), rw(pdas.forge(mint)), ro(ledger), rw(pdas.holder(mint, wallet)), rw(pdas.ticket(mint, seq)), ro(SystemProgram.programId)],
-    Buffer.concat([disc('process_buy'), wallet.toBuffer()]),
+    Buffer.concat([disc('process_buy'), wallet.toBuffer(), u64(seq)]),
   ),
-  processOut: ({ mint, ledger, wallet }) => instruction(
-    [ro(pdas.state(mint)), rw(pdas.forge(mint)), ro(ledger), rw(pdas.holder(mint, wallet))],
-    Buffer.concat([disc('process_out'), wallet.toBuffer()]),
-  ),
+  /** `wallets`: the senders of the next out entries, in order. Each wallet's holder is passed once. */
+  processOuts: ({ mint, ledger, wallets }) => {
+    const holders = [...new Set(wallets.map((w) => w.toBase58()))];
+    const position = new Map(holders.map((w, i) => [w, i]));
+    const indices = Buffer.from(wallets.map((w) => position.get(w.toBase58())));
+    const len = Buffer.alloc(4);
+    len.writeUInt32LE(indices.length);
+    return instruction(
+      [ro(pdas.state(mint)), rw(pdas.forge(mint)), ro(ledger), ...holders.map((w) => rw(pdas.holder(mint, new PublicKey(w))))],
+      Buffer.concat([disc('process_outs'), len, indices]),
+    );
+  },
   processSkip: ({ mint, ledger }) => instruction([ro(pdas.state(mint)), rw(pdas.forge(mint)), ro(ledger)], disc('process_skip')),
+  recoverOverflow: ({ mint, ledger }) => instruction([ro(pdas.state(mint)), rw(pdas.forge(mint)), ro(ledger)], disc('recover_overflow')),
   initCollection: ({ admin, mint, name, uri, uriBase, royaltyBps }) => instruction(
     [signer(admin), ro(pdas.state(mint)), rw(pdas.rockies(mint)), ro(pdas.authority(mint)), rw(pdas.collection(mint)), ro(CORE_PROGRAM_ID), ro(SystemProgram.programId)],
     Buffer.concat([disc('init_collection'), str(name), str(uri), str(uriBase), u16(royaltyBps)]),
@@ -203,7 +244,7 @@ export const ix = {
     disc('walk'),
   ),
   crown: ({ payer, mint, seq }) => instruction(
-    [signer(payer), ro(pdas.rockies(mint)), rw(pdas.ticket(mint, seq)), ro(pdas.authority(mint)), ro(pdas.collection(mint)),
+    [signer(payer), rw(pdas.rockies(mint)), rw(pdas.ticket(mint, seq)), ro(pdas.authority(mint)), ro(pdas.collection(mint)),
       rw(pdas.rocky(mint, seq)), ro(CORE_PROGRAM_ID), ro(SystemProgram.programId)],
     disc('crown'),
   ),
@@ -230,36 +271,56 @@ export async function supernovaBiggestSeq(conn, mint, forge) {
   return biggest.biggestBuySeq;
 }
 
+// Limits for one process_outs instruction: entries, and distinct wallets (each adds an account).
+export const OUTS_PER_STEP = 200;
+export const OUT_WALLETS_PER_STEP = 16;
+
 /**
- * The next crank steps from the forge cursor: one instruction per ledger entry
- * (two entries for a router hand-off). Returns { steps, outWallets }.
+ * The next crank steps from the forge's cursors, reading both ledger rings in
+ * `seq` order: a process_buy per buy (a router buy and its hand-off together),
+ * a process_skip per buy-ring entry with nobody to credit, and one process_outs
+ * per run of sells and sends. Each step is { instruction, units }, `units` being
+ * a compute budget with headroom. `recover` is set when a ring wrapped past the
+ * cursor: send recover_overflow first.
  */
-export function planCrank({ mint, ledger, cranker, forge, entries, head, max = 4 }) {
-  const bySeq = new Map(entries.map((e) => [e.seq, e]));
+export function planCrank({ mint, ledger, cranker, forge, decoded, max = 4 }) {
+  const { buyCount, outCount, buyAt, outAt } = decoded;
+  if (buyCount - forge.nextBuy > BUY_CAPACITY || outCount - forge.nextOut > OUT_CAPACITY) {
+    return { steps: [], recover: true };
+  }
   const steps = [];
-  const outWallets = [];
-  let seq = forge.nextSeq;
-  while (steps.length < max && seq < head) {
-    const e = bySeq.get(seq);
-    if (!e) break; // overwritten: recover_overflow is needed
-    const isRouter = forge.routers.some((r) => r.equals(e.to));
-    if (e.kind === KIND.BUY && isRouter) {
-      const next = bySeq.get(seq + 1);
-      if (next && next.kind === KIND.TRANSFER && next.from.equals(e.to) && next.slot === e.slot) {
-        steps.push(ix.processBuy({ cranker, mint, ledger, seq, wallet: next.to }));
-        seq += 2;
-      } else {
-        steps.push(ix.processSkip({ mint, ledger }));
-        seq += 1;
+  let b = forge.nextBuy, o = forge.nextOut;
+  while (steps.length < max && (b < buyCount || o < outCount)) {
+    const buy = buyAt(b);
+    const out = outAt(o);
+    if (out && (!buy || out.seq < buy.seq)) {
+      const wallets = [];
+      const distinct = new Set();
+      for (let e = outAt(o); e && (!buy || e.seq < buy.seq) && wallets.length < OUTS_PER_STEP; e = outAt(o)) {
+        const key = e.from.toBase58();
+        if (!distinct.has(key) && distinct.size === OUT_WALLETS_PER_STEP) break;
+        distinct.add(key);
+        wallets.push(e.from);
+        o++;
       }
-    } else if (e.kind === KIND.BUY) {
-      steps.push(ix.processBuy({ cranker, mint, ledger, seq, wallet: e.to }));
-      seq += 1;
+      steps.push({
+        instruction: ix.processOuts({ mint, ledger, wallets }),
+        units: 20_000 + 2_000 * wallets.length + 15_000 * distinct.size,
+      });
+    } else if (buy.kind === KIND.BUY) {
+      steps.push({ instruction: ix.processBuy({ cranker, mint, ledger, seq: buy.seq, wallet: buy.to }), units: 60_000 });
+      b++;
     } else {
-      steps.push(ix.processOut({ mint, ledger, wallet: e.from }));
-      outWallets.push(e.from);
-      seq += 1;
+      const next = buy.kind === KIND.ROUTER_BUY ? buyAt(b + 1) : null;
+      if (next && next.kind === KIND.HANDOFF && next.from.equals(buy.to) && next.slot === buy.slot) {
+        steps.push({ instruction: ix.processBuy({ cranker, mint, ledger, seq: buy.seq, wallet: next.to }), units: 60_000 });
+        b += 2;
+      } else {
+        // A router buy the router kept, or a hand-off with no router buy before it.
+        steps.push({ instruction: ix.processSkip({ mint, ledger }), units: 15_000 });
+        b++;
+      }
     }
   }
-  return { steps, outWallets, nextSeq: seq };
+  return { steps, recover: false };
 }

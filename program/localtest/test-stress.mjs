@@ -1,7 +1,7 @@
 // A hot curve: many wallets buy and sell at the same time while the bot runs.
 // Measures how fast the bot turns entries into tickets and Rockies, and checks it catches up.
 import { Keypair, Transaction, check, finish, fund, launch, buyTx, sell, send, conn, TIER_THRESHOLDS } from './lib.mjs';
-import { ix, read } from '../client/rockhook.mjs';
+import { backlog, ix, read } from '../client/rockhook.mjs';
 import { createForge } from '../forge/forge.mjs';
 
 const WALLETS = 40, BUYS_EACH = 5;
@@ -37,7 +37,7 @@ let caughtUp = false;
 for (let i = 0; i < 240 && !caughtUp; i++) {
   const f = await read.forge(conn, mint);
   const tickets = await read.tickets(conn, mint);
-  caughtUp = f.nextSeq >= head && tickets.every((t) => t.minted && (t.ashed || t.supernova || true));
+  caughtUp = backlog(f, await read.ledger(conn, (await read.state(conn, mint)).ledger)) === 0 && tickets.every((t) => t.minted);
   if (!caughtUp) await new Promise((r) => setTimeout(r, 500));
 }
 const total = (Date.now() - t0) / 1000;

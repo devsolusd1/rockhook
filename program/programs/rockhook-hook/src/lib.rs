@@ -46,21 +46,21 @@ pub mod rockhook_hook {
     }
 
     /// Next ledger entry is a buy: create its ticket.
-    pub fn process_buy(ctx: Context<ProcessBuy>, wallet: Pubkey) -> Result<()> {
-        process_buy::handler(ctx, wallet)
+    pub fn process_buy(ctx: Context<ProcessBuy>, wallet: Pubkey, seq: u64) -> Result<()> {
+        process_buy::handler(ctx, wallet, seq)
     }
 
-    /// Next ledger entry is a sell or a send: burn out the sender's tickets.
-    pub fn process_out(ctx: Context<ProcessOut>, wallet: Pubkey) -> Result<()> {
-        process_out::handler(ctx, wallet)
+    /// Next ledger entries are sells or sends: burn out the senders' tickets.
+    pub fn process_outs<'info>(ctx: Context<'info, ProcessOuts<'info>>, holders: Vec<u8>) -> Result<()> {
+        process_outs::handler(ctx, holders)
     }
 
-    /// Next ledger entry is a router buy with no hand-off: skip it.
+    /// Next buy-ring entry has no user to credit: skip it.
     pub fn process_skip(ctx: Context<ProcessSkip>) -> Result<()> {
         process_skip::handler(ctx)
     }
 
-    /// Recovers from a ledger that wrapped past unprocessed entries.
+    /// Recovers from a ledger ring that wrapped past unread entries.
     pub fn recover_overflow(ctx: Context<RecoverOverflow>) -> Result<()> {
         recover_overflow::handler(ctx)
     }

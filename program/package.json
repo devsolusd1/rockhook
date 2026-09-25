@@ -11,6 +11,7 @@
     "test:phase4": "node localtest/test-phase4.mjs",
     "test:runnerup": "node localtest/test-runnerup.mjs",
     "test:stress": "node localtest/test-stress.mjs",
+    "test:spam": "node localtest/test-spam.mjs",
     "test:draw-late": "node localtest/test-draw-late.mjs"
   },
   "dependencies": {
