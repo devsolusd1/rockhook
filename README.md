@@ -13,15 +13,17 @@ Landing page for RockHook, a Solana token with a supply of exactly one $ROCK (9 
 
 ## Tiers
 
-| Tier | Buy size | Flame |
+| Tier | $ROCK received in one buy | Flame |
 |---|---|---|
-| Ember | under 0.1 SOL | ≈ 900 K |
-| Flame | 0.1 to 0.5 SOL | ≈ 1,300 K |
-| White-hot | 0.5 to 1 SOL | ≈ 1,800 K |
-| Blue Flame | 1 to 3 SOL | ≈ 2,200 K |
-| Plasma | 3 SOL or more | ≈ 10,000 K |
-| Supernova | 1 of 1: first buy, graduating buy, biggest buyer | ≈ 10⁹ K |
+| Ember | under 0.001 | ≈ 900 K |
+| Flame | 0.001 to 0.0025 | ≈ 1,300 K |
+| White-hot | 0.0025 to 0.005 | ≈ 1,800 K |
+| Blue Flame | 0.005 to 0.01 | ≈ 2,200 K |
+| Plasma | 0.01 or more | ≈ 10,000 K |
+| Supernova | 1 of 1: a random lit Ember drawn at graduation, the graduating buy, the biggest buyer on the curve | ≈ 10⁹ K |
 | Burnt out | sold before graduation | cold ash |
+
+Buys under 0.1 SOL don't forge an Ember. The same SOL buys more $ROCK early on the curve, so early buys burn hotter.
 
 ## Status
 

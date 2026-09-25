@@ -144,6 +144,9 @@
   .field input:focus { outline: none; }
   .field span { display: grid; place-items: center; padding-inline: 14px; font-family: var(--mono); color: var(--ash); border-left: 1px solid var(--cinder); }
   .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+  .slider { display: flex; align-items: center; gap: 14px; max-width: 420px; }
+  .slider input { flex: 1; min-width: 0; accent-color: var(--ember); }
+  .slider output { font-family: var(--mono); font-size: 15px; min-width: 64px; font-variant-numeric: tabular-nums; }
   .presets button { font-family: var(--mono); font-size: 13px; background: transparent; color: var(--bone); border: 1px solid var(--cinder); padding: 6px 10px; cursor: pointer; }
   .presets button:hover { border-color: var(--ember); }
   .check { display: flex; gap: 10px; align-items: center; font-size: 15px; color: var(--bone); cursor: pointer; text-transform: none; letter-spacing: 0; }
@@ -251,7 +254,7 @@
       <div class="hero-copy">
         <p class="eyebrow">$ROCK · Solana · Meteora bonding curve</p>
         <h1 id="hero-title">Every buy forges an <em>Ember</em>.</h1>
-        <p class="lede">RockHook carries a hook in its code. Each time someone buys $ROCK on the curve, the hook writes it down on-chain and that buy becomes an Ember NFT. The bigger the buy, the hotter it burns. When the curve graduates, the forge goes cold for good.</p>
+        <p class="lede">RockHook carries a hook in its code. Each time someone buys $ROCK on the curve, the hook writes it down on-chain and that buy becomes an Ember NFT. The more $ROCK a buy gets, the hotter it burns, so the earliest buys burn brightest. When the curve graduates, the forge goes cold for good.</p>
         <div class="actions">
           <a class="btn" aria-disabled="true" role="link">Buy soon</a>
           <button class="btn ghost" type="button" data-goto="docs">How the hook works</button>
@@ -266,7 +269,7 @@
     <dl class="facts">
       <div class="fact"><dt>Embers forged</dt><dd>0 until launch</dd></div>
       <div class="fact"><dt>Forge closes</dt><dd>At $200K cap</dd></div>
-      <div class="fact"><dt>Temperatures</dt><dd>6 + ash</dd></div>
+      <div class="fact"><dt>Minimum buy</dt><dd>0.1 SOL</dd></div>
       <div class="fact"><dt>Supernovas</dt><dd>3, each 1 of 1</dd></div>
     </dl>
 
@@ -279,7 +282,7 @@
       <ol class="steps">
         <li><h3>Buy on the curve</h3><p>Buy $ROCK anywhere the Meteora curve trades: its site, Jupiter or your terminal of choice.</p></li>
         <li><h3>The hook records it</h3><p>Code attached to the token runs inside your buy and writes a ticket on-chain with your wallet, size and buy number.</p></li>
-        <li><h3>Your Ember is forged</h3><p>The forge mints an Ember from the ticket, or you claim it yourself. Its flame matches the size of that buy.</p></li>
+        <li><h3>Your Ember is forged</h3><p>The forge mints an Ember from the ticket, or you claim it yourself. Its flame matches how much $ROCK that buy received.</p></li>
         <li><h3>Graduation closes the forge</h3><p>At a $200,000 market cap, $ROCK moves to a Meteora pool, the hook is removed and no Ember can ever be forged again.</p></li>
       </ol>
       <div class="rule">
@@ -298,7 +301,7 @@
       <div class="section-head">
         <p class="eyebrow">Rarity is temperature</p>
         <h2 id="temps-title">The bigger the buy, the hotter the flame</h2>
-        <p class="lede">An Ember's tier comes from the size of the one buy that forged it. Each tier is named after a real flame, and its temperature is the colour temperature of that flame, rounded.</p>
+        <p class="lede">An Ember's tier comes from how much $ROCK the buy that forged it received. The same SOL buys more $ROCK early on the curve, so early buyers burn hottest: about 0.9 SOL forges a Plasma at a $10K market cap, while at $100K it takes about 9 SOL. Buys under 0.1 SOL don't forge an Ember. Each tier is named after a real flame, with that flame's colour temperature, rounded.</p>
       </div>
       <div>
         <div class="heat" role="img" aria-label="Heat scale from dull red through orange, white, blue and violet to gold"></div>
@@ -308,32 +311,32 @@
         <article class="tier">
           <img class="px" src="art/ember.png" width="64" height="64" alt="Ember tier: dull red glow">
           <div class="name">Ember</div>
-          <dl><dt>Buy</dt><dd>under 0.1 SOL</dd><dt>Heat</dt><dd>≈ 900 K</dd></dl>
+          <dl><dt>Receives</dt><dd>under 0.001 ROCK</dd><dt>Heat</dt><dd>≈ 900 K</dd></dl>
         </article>
         <article class="tier">
           <img class="px" src="art/flame.png" width="64" height="64" alt="Flame tier: orange glow">
           <div class="name">Flame</div>
-          <dl><dt>Buy</dt><dd>0.1 to 0.5 SOL</dd><dt>Heat</dt><dd>≈ 1,300 K</dd></dl>
+          <dl><dt>Receives</dt><dd>0.001 to 0.0025 ROCK</dd><dt>Heat</dt><dd>≈ 1,300 K</dd></dl>
         </article>
         <article class="tier">
           <img class="px" src="art/white-hot.png" width="64" height="64" alt="White-hot tier: yellow-white glow with sparks">
           <div class="name">White-hot</div>
-          <dl><dt>Buy</dt><dd>0.5 to 1 SOL</dd><dt>Heat</dt><dd>≈ 1,800 K</dd></dl>
+          <dl><dt>Receives</dt><dd>0.0025 to 0.005 ROCK</dd><dt>Heat</dt><dd>≈ 1,800 K</dd></dl>
         </article>
         <article class="tier">
           <img class="px" src="art/blue-flame.png" width="64" height="64" alt="Blue Flame tier: blue glow with glowing cracks">
           <div class="name">Blue Flame</div>
-          <dl><dt>Buy</dt><dd>1 to 3 SOL</dd><dt>Heat</dt><dd>≈ 2,200 K</dd></dl>
+          <dl><dt>Receives</dt><dd>0.005 to 0.01 ROCK</dd><dt>Heat</dt><dd>≈ 2,200 K</dd></dl>
         </article>
         <article class="tier">
           <img class="px" src="art/plasma.png" width="64" height="64" alt="Plasma tier: violet glow with a glowing outline">
           <div class="name">Plasma</div>
-          <dl><dt>Buy</dt><dd>3 SOL or more</dd><dt>Heat</dt><dd>≈ 10,000 K</dd></dl>
+          <dl><dt>Receives</dt><dd>0.01 ROCK or more</dd><dt>Heat</dt><dd>≈ 10,000 K</dd></dl>
         </article>
         <article class="tier unique">
           <img class="px" src="art/supernova.png" width="64" height="64" alt="Supernova: gold glow with a crown on a dark sunburst">
           <div class="name">Supernova</div>
-          <dl><dt>Supply</dt><dd>3, each 1 of 1</dd><dt>Given to</dt><dd>The first buy, the buy that fills the curve and the biggest buyer</dd><dt>Heat</dt><dd>≈ 1,000,000,000 K</dd></dl>
+          <dl><dt>Supply</dt><dd>3, each 1 of 1</dd><dt>Given to</dt><dd>One lit Ember drawn at random at graduation, the buy that fills the curve and the biggest buyer on the curve</dd><dt>Heat</dt><dd>≈ 1,000,000,000 K</dd></dl>
         </article>
       </div>
     </section>
@@ -351,18 +354,24 @@
             <span>SOL</span>
           </div>
           <div class="presets" role="group" aria-label="Example buy sizes">
-            <button type="button" data-sol="0.05">0.05</button>
+            <button type="button" data-sol="0.1">0.1</button>
             <button type="button" data-sol="0.25">0.25</button>
             <button type="button" data-sol="0.8">0.8</button>
             <button type="button" data-sol="2">2</button>
             <button type="button" data-sol="5">5</button>
           </div>
+          <label for="mcap">Market cap when you buy</label>
+          <div class="slider">
+            <input id="mcap" name="mcap" type="range" min="10000" max="197500" step="2500" value="25000">
+            <output id="mcap-out" for="mcap">$25K</output>
+          </div>
           <label class="check" for="sold"><input id="sold" name="sold" type="checkbox"> I sold before graduation</label>
-          <p id="calc-note" class="lede" style="font-size:14px">Each buy forges its own Ember. Ten buys of 0.1 SOL forge ten Flames, never one Blue Flame.</p>
+          <p id="calc-note" class="lede" style="font-size:14px">Estimates with SOL at $117, price impact included. Each buy forges its own Ember, so ten small buys forge ten cooler Embers, never one hot one.</p>
         </form>
         <div class="result" aria-live="polite">
           <img id="result-img" class="px" src="art/flame.png" width="64" height="64" alt="Flame Ember">
           <div id="result-name" class="name">Flame</div>
+          <div id="result-rock" class="temp"></div>
           <div id="result-temp" class="temp">≈ 1,300 K</div>
         </div>
       </div>
@@ -418,14 +427,15 @@
           <div class="ticket" aria-label="Example ticket">
             <div class="head"><span>Ticket #1,204</span><span class="lit">lit</span></div>
             <div class="row"><span>wallet</span><span>7xKX…9fPq</span></div>
-            <div class="row"><span>paid</span><span>0.62 SOL</span></div>
+            <div class="row"><span>received</span><span>0.004200000 ROCK</span></div>
+            <div class="row"><span>value</span><span>≈ 0.72 SOL</span></div>
             <div class="row"><span>buy number</span><span>1,204</span></div>
             <div class="row"><span>slot</span><span>412,883,105</span></div>
             <div class="row"><span>tier</span><span>White-hot</span></div>
             <div class="row"><span>ember</span><span>not claimed yet</span></div>
             <small>Example values.</small>
           </div>
-          <p>Because the buy number and size are written by the program at the moment of the trade, the first buyer, the biggest buyer and every tier are facts on the chain. Nobody picks winners by hand.</p>
+          <p>Because the buy number and size are written by the program at the moment of the trade, the biggest buyer, the buy that fills the curve and every tier are facts on the chain. Nobody picks winners by hand.</p>
         </section>
 
         <section id="doc-forge">
@@ -437,21 +447,22 @@
 
         <section id="doc-heat">
           <h3>Temperature</h3>
-          <p>An Ember's tier is decided by the SOL paid in the single buy that forged it. There is no dice roll and nothing hidden. Anyone can check a ticket and know which Ember it produces.</p>
+          <p>An Ember's tier is decided by how much $ROCK the single buy that forged it received, which is exactly what the hook sees move. There is no dice roll and nothing hidden. Anyone can check a ticket and know which Ember it produces.</p>
+          <p>Because the curve's price rises with every buy, the same SOL gets less $ROCK as the market cap climbs, so early buyers burn hotter by design. The hook also values each buy in SOL at the curve's current price, and buys under 0.1 SOL don't get a ticket, which keeps the collection free of spam.</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Tier</th><th>Buy</th><th>Flame</th></tr></thead>
+              <thead><tr><th>Tier</th><th>$ROCK received</th><th>Flame</th></tr></thead>
               <tbody>
-                <tr><td>Ember</td><td class="m">&lt; 0.1 SOL</td><td class="m">≈ 900 K</td></tr>
-                <tr><td>Flame</td><td class="m">0.1 – 0.5 SOL</td><td class="m">≈ 1,300 K</td></tr>
-                <tr><td>White-hot</td><td class="m">0.5 – 1 SOL</td><td class="m">≈ 1,800 K</td></tr>
-                <tr><td>Blue Flame</td><td class="m">1 – 3 SOL</td><td class="m">≈ 2,200 K</td></tr>
-                <tr><td>Plasma</td><td class="m">≥ 3 SOL</td><td class="m">≈ 10,000 K</td></tr>
-                <tr><td>Supernova</td><td>First buy, the buy that fills the curve, biggest buyer</td><td class="m">≈ 10⁹ K</td></tr>
+                <tr><td>Ember</td><td class="m">&lt; 0.001 ROCK</td><td class="m">≈ 900 K</td></tr>
+                <tr><td>Flame</td><td class="m">0.001 – 0.0025 ROCK</td><td class="m">≈ 1,300 K</td></tr>
+                <tr><td>White-hot</td><td class="m">0.0025 – 0.005 ROCK</td><td class="m">≈ 1,800 K</td></tr>
+                <tr><td>Blue Flame</td><td class="m">0.005 – 0.01 ROCK</td><td class="m">≈ 2,200 K</td></tr>
+                <tr><td>Plasma</td><td class="m">≥ 0.01 ROCK</td><td class="m">≈ 10,000 K</td></tr>
+                <tr><td>Supernova</td><td>A random draw among lit Embers, the buy that fills the curve, the biggest buyer on the curve</td><td class="m">≈ 10⁹ K</td></tr>
               </tbody>
             </table>
           </div>
-          <p>The three Supernovas are settled when the curve graduates, because only then is the biggest buyer final.</p>
+          <p>At graduation, three Embers go supernova. Two are facts on the chain: the one forged by the buy that fills the curve, and the biggest buy of the wallet that bought the most on the curve in total. That wallet's Supernova is kept even if it sold before graduation. The third is drawn from every Ember still lit at graduation, using verifiable on-chain randomness (VRF), so nobody, the team included, can know or pick the winner in advance. Each Ember's chance grows with the size of the buy that forged it, so splitting a buy into many small ones doesn't help.</p>
         </section>
 
         <section id="doc-ash">
@@ -462,7 +473,7 @@
 
         <section id="doc-grad">
           <h3>Graduation</h3>
-          <p>When buys push $ROCK to a $200,000 market cap, the last buy completes the curve. Meteora moves the liquidity into a DAMM v2 pool, where it is locked forever, and removes the hook from the token as part of the migration. From that moment $ROCK is an ordinary token and the forge is closed.</p>
+          <p>When buys push $ROCK to a $200,000 market cap, the last buy completes the curve. Meteora moves the liquidity into a DAMM v2 pool, where it is locked forever, and removes the hook from the token as part of the migration. From that moment $ROCK is an ordinary token and the forge is closed. Right after, the hook program is locked for good: its upgrade authority is revoked, so nobody, the team included, can ever change the Ember rules again.</p>
           <p>Tickets written before graduation can still be claimed afterwards. What can't happen is a new ticket. The number of Embers that will ever exist is fixed by the curve.</p>
         </section>
 
@@ -494,7 +505,7 @@
       <div class="faq">
         <details>
           <summary>How many Embers will exist?</summary>
-          <p>One for every buy made on the curve before graduation, plus the three Supernovas. Nobody knows the final number until the curve fills, and nobody can add to it afterwards.</p>
+          <p>One for every buy made on the curve before graduation, and three of them go supernova at the end. Nobody knows the final number until the curve fills, and nobody can add to it afterwards.</p>
         </details>
         <details>
           <summary>Do I have to do anything to get my Ember?</summary>
@@ -506,7 +517,7 @@
         </details>
         <details>
           <summary>Can I game the rarity?</summary>
-          <p>The tier depends only on the size of a single buy, and every buy is public on-chain. Splitting a buy gives you more Embers at a cooler tier. The three Supernovas go to events that can each happen only once.</p>
+          <p>The tier depends only on how much $ROCK a single buy receives, and every buy is public on-chain. Splitting a buy gives you more Embers at a cooler tier. One Supernova is drawn at random from the Embers still lit at graduation, and the other two go to events that can each happen only once.</p>
         </details>
         <details>
           <summary>What happens after graduation?</summary>
@@ -556,10 +567,10 @@
 
   // ---------- tiers ----------
   const TIERS = [
-    { max: 0.1, id: 'ember', name: 'Ember', temp: '≈ 900 K', glow: '#a8280c' },
-    { max: 0.5, id: 'flame', name: 'Flame', temp: '≈ 1,300 K', glow: '#f08020' },
-    { max: 1, id: 'white-hot', name: 'White-hot', temp: '≈ 1,800 K', glow: '#ffd860' },
-    { max: 3, id: 'blue-flame', name: 'Blue Flame', temp: '≈ 2,200 K', glow: '#2890f0' },
+    { max: 0.001, id: 'ember', name: 'Ember', temp: '≈ 900 K', glow: '#a8280c' },
+    { max: 0.0025, id: 'flame', name: 'Flame', temp: '≈ 1,300 K', glow: '#f08020' },
+    { max: 0.005, id: 'white-hot', name: 'White-hot', temp: '≈ 1,800 K', glow: '#ffd860' },
+    { max: 0.01, id: 'blue-flame', name: 'Blue Flame', temp: '≈ 2,200 K', glow: '#2890f0' },
     { max: Infinity, id: 'plasma', name: 'Plasma', temp: '≈ 10,000 K', glow: '#c040f0' },
   ];
   const SUPERNOVA = { id: 'supernova', name: 'Supernova', temp: '≈ 1,000,000,000 K', glow: '#ffe040' };
@@ -584,24 +595,53 @@
     }, 1800);
   }
 
-  // Calculator.
+  // Calculator. The launch curve sampled every 1 SOL: [market cap USD, SOL in so far, ROCK sold so far], SOL at $117.
+  const CURVE = [[10000,0,0],[10224,1,0.0115714],[10450,2,0.0228911],[10678,3,0.0339673],[10909,4,0.0448078],[11142,5,0.05542],[11378,6,0.065811],[11617,7,0.0759877],[11857,8,0.0859567],[12101,9,0.0957241],[12347,10,0.1052962],[12595,11,0.1146787],[12846,12,0.1238771],[13099,13,0.1328969],[13354,14,0.1417431],[13613,15,0.1504208],[13873,16,0.1589348],[14136,17,0.1672895],[14402,18,0.1754895],[14670,19,0.1835389],[14940,20,0.191442],[15213,21,0.1992026],[15489,22,0.2068247],[15767,23,0.2143117],[16047,24,0.2216674],[16330,25,0.2288951],[16615,26,0.2359982],[16903,27,0.2429798],[17193,28,0.2498431],[17486,29,0.2565909],[17781,30,0.2632263],[18079,31,0.269752],[18379,32,0.2761706],[18681,33,0.2824849],[18986,34,0.2886973],[19294,35,0.2948103],[19604,36,0.3008262],[19917,37,0.3067474],[20231,38,0.312576],[20549,39,0.3183142],[20869,40,0.3239641],[21191,41,0.3295278],[21516,42,0.3350071],[21843,43,0.340404],[22173,44,0.3457203],[22505,45,0.3509579],[22840,46,0.3561184],[23177,47,0.3612036],[23517,48,0.366215],[23859,49,0.3711543],[24204,50,0.3760231],[24551,51,0.3808228],[24900,52,0.3855548],[25252,53,0.3902207],[25607,54,0.3948217],[25964,55,0.3993593],[26323,56,0.4038347],[26685,57,0.4082491],[27050,58,0.412604],[27416,59,0.4169003],[27786,60,0.4211394],[28158,61,0.4253223],[28532,62,0.4294501],[28909,63,0.433524],[29288,64,0.4375449],[29669,65,0.441514],[30054,66,0.4454322],[30440,67,0.4493004],[30829,68,0.4531197],[31221,69,0.4568909],[31615,70,0.460615],[32011,71,0.4642928],[32410,72,0.4679251],[32812,73,0.4715129],[33216,74,0.475057],[33622,75,0.4785581],[34031,76,0.4820169],[34442,77,0.4854344],[34856,78,0.4888112],[35272,79,0.492148],[35691,80,0.4954455],[36112,81,0.4987044],[36536,82,0.5019255],[36962,83,0.5051093],[37391,84,0.5082565],[37822,85,0.5113677],[38255,86,0.5144436],[38691,87,0.5174847],[39130,88,0.5204916],[39571,89,0.523465],[40014,90,0.5264053],[40460,91,0.529313],[40909,92,0.5321889],[41360,93,0.5350333],[41813,94,0.5378467],[42269,95,0.5406298],[42727,96,0.5433829],[43188,97,0.5461066],[43651,98,0.5488013],[44117,99,0.5514674],[44585,100,0.5541055],[45055,101,0.556716],[45529,102,0.5592993],[46004,103,0.5618558],[46482,104,0.5643859],[46963,105,0.5668901],[47446,106,0.5693687],[47931,107,0.5718222],[48419,108,0.5742509],[48909,109,0.5766551],[49402,110,0.5790354],[49898,111,0.5813919],[50395,112,0.5837251],[50896,113,0.5860353],[51398,114,0.5883228],[51904,115,0.5905881],[52411,116,0.5928313],[52922,117,0.5950528],[53434,118,0.597253],[53949,119,0.5994322],[54467,120,0.6015905],[54987,121,0.6037284],[55509,122,0.6058462],[56034,123,0.607944],[56562,124,0.6100223],[57092,125,0.6120812],[57624,126,0.614121],[58159,127,0.6161421],[58696,128,0.6181446],[59236,129,0.6201288],[59779,130,0.6220949],[60323,131,0.6240433],[60870,132,0.6259741],[61420,133,0.6278876],[61972,134,0.629784],[62527,135,0.6316636],[63084,136,0.6335265],[63644,137,0.635373],[64206,138,0.6372033],[64770,139,0.6390176],[65337,140,0.6408161],[65907,141,0.6425991],[66479,142,0.6443666],[67053,143,0.6461191],[67630,144,0.6478565],[68209,145,0.6495791],[68791,146,0.6512872],[69375,147,0.6529808],[69962,148,0.6546602],[70551,149,0.6563255],[71143,150,0.657977],[71737,151,0.6596147],[72334,152,0.6612389],[72933,153,0.6628498],[73535,154,0.6644474],[74139,155,0.666032],[74745,156,0.6676037],[75354,157,0.6691627],[75966,158,0.6707091],[76580,159,0.6722431],[77196,160,0.6737648],[77815,161,0.6752744],[78436,162,0.676772],[79060,163,0.6782577],[79686,164,0.6797318],[80315,165,0.6811943],[80946,166,0.6826453],[81580,167,0.6840851],[82216,168,0.6855137],[82855,169,0.6869313],[83496,170,0.688338],[84140,171,0.6897339],[84786,172,0.6911191],[85434,173,0.6924938],[86085,174,0.6938581],[86739,175,0.6952121],[87395,176,0.6965559],[88053,177,0.6978896],[88714,178,0.6992134],[89377,179,0.7005274],[90043,180,0.7018316],[90712,181,0.7031261],[91382,182,0.7044112],[92056,183,0.7056869],[92731,184,0.7069532],[93409,185,0.7082103],[94090,186,0.7094583],[94773,187,0.7106973],[95459,188,0.7119274],[96147,189,0.7131487],[96837,190,0.7143612],[97530,191,0.7155651],[98226,192,0.7167605],[98924,193,0.7179474],[99624,194,0.719126],[100327,195,0.7202963],[101033,196,0.7214584],[101740,197,0.7226124],[102451,198,0.7237584],[103163,199,0.7248964],[103879,200,0.7260266],[104596,201,0.7271491],[105317,202,0.7282638],[106039,203,0.729371],[106764,204,0.7304706],[107492,205,0.7315628],[108222,206,0.7326475],[108955,207,0.733725],[109690,208,0.7347952],[110427,209,0.7358583],[111167,210,0.7369143],[111910,211,0.7379633],[112654,212,0.7390053],[113402,213,0.7400404],[114152,214,0.7410688],[114904,215,0.7420904],[115659,216,0.7431053],[116416,217,0.7441136],[117176,218,0.7451153],[117938,219,0.7461106],[118703,220,0.7470995],[119470,221,0.7480819],[120239,222,0.7490581],[121011,223,0.7500281],[121786,224,0.7509919],[122563,225,0.7519495],[123343,226,0.7529011],[124124,227,0.7538467],[124909,228,0.7547863],[125696,229,0.7557201],[126485,230,0.756648],[127277,231,0.7575701],[128071,232,0.7584865],[128868,233,0.7593972],[129667,234,0.7603023],[130469,235,0.7612019],[131273,236,0.7620959],[132080,237,0.7629844],[132889,238,0.7638675],[133701,239,0.7647453],[134515,240,0.7656177],[135331,241,0.7664849],[136150,242,0.7673468],[136972,243,0.7682036],[137796,244,0.7690552],[138622,245,0.7699018],[139451,246,0.7707433],[140283,247,0.7715798],[141116,248,0.7724114],[141953,249,0.773238],[142792,250,0.7740598],[143633,251,0.7748768],[144477,252,0.775689],[145323,253,0.7764964],[146172,254,0.7772992],[147023,255,0.7780973],[147876,256,0.7788908],[148732,257,0.7796797],[149591,258,0.7804641],[150452,259,0.781244],[151315,260,0.7820194],[152181,261,0.7827905],[153050,262,0.7835571],[153921,263,0.7843194],[154794,264,0.7850774],[155670,265,0.7858311],[156548,266,0.7865806],[157429,267,0.7873258],[158312,268,0.788067],[159198,269,0.7888039],[160086,270,0.7895368],[160977,271,0.7902657],[161870,272,0.7909905],[162766,273,0.7917113],[163664,274,0.7924281],[164565,275,0.793141],[165468,276,0.7938501],[166373,277,0.7945552],[167281,278,0.7952566],[168192,279,0.7959541],[169104,280,0.7966478],[170020,281,0.7973379],[170938,282,0.7980242],[171858,283,0.7987068],[172781,284,0.7993858],[173706,285,0.8000611],[174634,286,0.8007329],[175564,287,0.8014011],[176497,288,0.8020657],[177432,289,0.8027269],[178370,290,0.8033845],[179310,291,0.8040388],[180252,292,0.8046896],[181197,293,0.805337],[182145,294,0.805981],[183095,295,0.8066217],[184047,296,0.807259],[185002,297,0.8078931],[185960,298,0.8085239],[186919,299,0.8091514],[187882,300,0.8097758],[188847,301,0.8103969],[189814,302,0.8110149],[190784,303,0.8116297],[191756,304,0.8122414],[192731,305,0.81285],[193708,306,0.8134555],[194687,307,0.814058],[195669,308,0.8146575],[196654,309,0.8152539],[197641,310,0.8158474],[198631,311,0.8164379],[199623,312,0.8170255],[199998,312.378,0.8172467]];
+  const FEE = 0.03, MIN_SOL = 0.1;
+  const usdCol = CURVE.map((r) => r[0]), solCol = CURVE.map((r) => r[1]), rockCol = CURVE.map((r) => r[2]);
+  function interp(xs, ys, x) {
+    if (x <= xs[0]) return ys[0];
+    for (let i = 1; i < xs.length; i++) {
+      if (x <= xs[i]) return ys[i - 1] + (ys[i] - ys[i - 1]) * (x - xs[i - 1]) / (xs[i] - xs[i - 1]);
+    }
+    return ys[ys.length - 1];
+  }
+  function rockFor(sol, capUsd) {
+    const before = interp(usdCol, solCol, capUsd);
+    const after = before + sol * (1 - FEE);
+    return interp(solCol, rockCol, after) - interp(solCol, rockCol, before);
+  }
   const amount = document.getElementById('sol-amount');
+  const mcap = document.getElementById('mcap');
+  const mcapOut = document.getElementById('mcap-out');
   const sold = document.getElementById('sold');
   const img = document.getElementById('result-img');
   const nameEl = document.getElementById('result-name');
+  const rockEl = document.getElementById('result-rock');
   const tempEl = document.getElementById('result-temp');
   function update() {
     const sol = parseFloat(amount.value);
+    const cap = Number(mcap.value);
+    mcapOut.textContent = `$${Math.round(cap / 1000)}K`;
     let tier;
-    if (sold.checked) tier = { id: 'burnt-out', name: 'Burnt out', temp: '≈ 300 K, cold ash' };
-    else if (!(sol > 0)) tier = { id: 'burnt-out', name: 'No buy yet', temp: 'Enter a buy size above zero' };
-    else tier = TIERS.find((t) => sol < t.max);
+    let rockText = '';
+    if (!(sol >= MIN_SOL)) {
+      tier = { id: 'burnt-out', name: 'No Ember', temp: "Buys under 0.1 SOL don't forge one" };
+    } else {
+      const rock = rockFor(sol, cap);
+      rockText = `≈ ${rock.toFixed(5)} ROCK`;
+      tier = sold.checked
+        ? { id: 'burnt-out', name: 'Burnt out', temp: '≈ 300 K, cold ash' }
+        : TIERS.find((t) => rock < t.max);
+    }
     img.src = `art/${tier.id}.png`;
     img.alt = `${tier.name} Ember`;
     nameEl.textContent = tier.name;
+    rockEl.textContent = rockText;
     tempEl.textContent = tier.temp;
   }
   amount.addEventListener('input', update);
+  mcap.addEventListener('input', update);
   sold.addEventListener('change', update);
   document.querySelectorAll('.presets button').forEach((b) =>
     b.addEventListener('click', () => { amount.value = b.dataset.sol; update(); }));
