@@ -1,4 +1,4 @@
-"""Ember rarity art: recolours base.png by flame temperature.
+"""Rocky rarity art: recolours base.png by flame temperature.
 
 Writes the 1024px tiers to nft/tiers/, the 64px copies the site uses to art/,
 and nft/rarity-sheet.png. Run: python nft/generate.py (needs Pillow).

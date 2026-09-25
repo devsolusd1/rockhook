@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RockHook</title>
-<meta name="description" content="A transfer hook turns every buy of $ROCK on the Meteora bonding curve into an Ember NFT. The bigger the buy, the hotter it burns. Graduation closes the forge.">
+<meta name="description" content="A transfer hook turns every buy of $ROCK on the Meteora bonding curve into a Rocky NFT. The bigger the buy, the hotter it burns. Graduation closes the forge.">
 <link rel="icon" type="image/png" href="/art/flame.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rockhook.fun">
 <meta property="og:title" content="RockHook ($ROCK)">
-<meta property="og:description" content="Every buy forges an Ember. The bigger the buy, the hotter it burns.">
+<meta property="og:description" content="Every buy forges a Rocky. The bigger the buy, the hotter it burns.">
 <meta property="og:image" content="https://rockhook.fun/nft/tiers/flame.png">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@Rockhookfun">
@@ -202,10 +202,34 @@
   .ca code { color: var(--ash); overflow-wrap: anywhere; padding: 8px 12px; }
   footer small { color: var(--ash); font-size: 13px; max-width: 70ch; }
 
+  /* ---------- my rockies ---------- */
+  .finder { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; }
+  .lookup { display: grid; gap: 8px; flex: 1 1 320px; max-width: 560px; }
+  .lookup label { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ash); }
+  .field.wide { max-width: none; }
+  .field.wide input { font-size: 15px; }
+  .field-btn { font-family: var(--display); font-size: 13px; letter-spacing: .06em; background: var(--cinder); color: var(--bone); border: 0; padding-inline: 16px; cursor: pointer; }
+  .field-btn:hover { background: var(--rust); }
+  .notice { font-family: var(--mono); font-size: 13px; color: var(--ash); }
+  .notice.error { color: #ff8a6a; }
+  .mine { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .rocky-card { background: var(--soot); border: 1px solid var(--cinder); padding: 12px; display: grid; gap: 10px; align-content: start; }
+  .rocky-card.supernova { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .rocky-card .name { font-family: var(--display); font-size: 16px; }
+  .rocky-card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13px; }
+  .rocky-card dt { color: var(--ash); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding-top: 2px; }
+  .rocky-card dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .chip { justify-self: start; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border: 1px solid currentColor; }
+  .chip.lit { color: var(--ember); }
+  .chip.ash { color: var(--ash); }
+  .chip.nova { color: #ffd23f; }
+  .chip.pending { color: var(--bone); }
+  .rocky-card .btn { font-size: 12px; padding: 10px 12px; text-align: center; }
+
   @media (max-width: 860px) {
     .hero { grid-template-columns: 1fr; }
     .portrait { width: min(100%, 360px); }
-    .steps, .tiers, .facts { grid-template-columns: 1fr 1fr; }
+    .steps, .tiers, .facts, .mine { grid-template-columns: 1fr 1fr; }
     .calc { grid-template-columns: 1fr; }
     .result { max-width: 260px; }
     .docs { grid-template-columns: 1fr; gap: 28px; }
@@ -241,6 +265,7 @@
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button id="tab-forge" role="tab" aria-selected="true" aria-controls="forge" data-tab="forge">Forge</button>
       <button id="tab-rarities" role="tab" aria-selected="false" aria-controls="rarities" data-tab="rarities" tabindex="-1">Rarities</button>
+      <button id="tab-rockies" role="tab" aria-selected="false" aria-controls="rockies" data-tab="rockies" tabindex="-1">My Rockies</button>
       <button id="tab-docs" role="tab" aria-selected="false" aria-controls="docs" data-tab="docs" tabindex="-1">Docs</button>
       <button id="tab-faq" role="tab" aria-selected="false" aria-controls="faq" data-tab="faq" tabindex="-1">FAQ</button>
     </nav>
@@ -253,21 +278,21 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
         <p class="eyebrow">777 $ROCK · Solana · Meteora bonding curve</p>
-        <h1 id="hero-title">Every buy forges an <em>Ember</em>.</h1>
-        <p class="lede">RockHook carries a hook in its code. Each time someone buys $ROCK on the curve, the hook writes it down on-chain and that buy becomes an Ember NFT. The more $ROCK a buy gets, the hotter it burns, so the earliest buys burn brightest. When the curve graduates, the forge goes cold for good.</p>
+        <h1 id="hero-title">Every buy forges a <em>Rocky</em>.</h1>
+        <p class="lede">RockHook carries a hook in its code. Each time someone buys $ROCK on the curve, the hook writes it down on-chain and that buy becomes a Rocky NFT. The more $ROCK a buy gets, the hotter it burns, so the earliest buys burn brightest. When the curve graduates, the forge goes cold for good.</p>
         <div class="actions">
           <a class="btn" aria-disabled="true" role="link">Buy soon</a>
           <button class="btn ghost" type="button" data-goto="docs">How the hook works</button>
         </div>
       </div>
       <figure class="portrait" id="portrait">
-        <img id="portrait-img" class="px" src="art/flame.png" width="64" height="64" alt="An Ember: a pixel-art lump of coal with glowing eyes and a burning grin on a sunburst background">
+        <img id="portrait-img" class="px" src="art/flame.png" width="64" height="64" alt="A Rocky: a pixel-art lump of coal with glowing eyes and a burning grin on a sunburst background">
         <figcaption><span id="portrait-name">Flame</span><span id="portrait-temp">≈ 1,300 K</span></figcaption>
       </figure>
     </section>
 
     <dl class="facts">
-      <div class="fact"><dt>Embers forged</dt><dd>0 until launch</dd></div>
+      <div class="fact"><dt>Rockies forged</dt><dd id="forged-count">0 until launch</dd></div>
       <div class="fact"><dt>Forge closes</dt><dd>At $200K cap</dd></div>
       <div class="fact"><dt>Minimum buy</dt><dd>0.1 SOL</dd></div>
       <div class="fact"><dt>Supernovas</dt><dd>3, each 1 of 1</dd></div>
@@ -275,21 +300,21 @@
 
     <section aria-labelledby="forge-title">
       <div class="section-head">
-        <p class="eyebrow">From buy to Ember</p>
+        <p class="eyebrow">From buy to Rocky</p>
         <h2 id="forge-title">Buy, record, forge, close</h2>
-        <p class="lede">Embers only exist for buys made while $ROCK is on the curve. Nobody can forge one after graduation, so the collection is exactly as big as the curve made it.</p>
+        <p class="lede">Rockies only exist for buys made while $ROCK is on the curve. Nobody can forge one after graduation, so the collection is exactly as big as the curve made it.</p>
       </div>
       <ol class="steps">
         <li><h3>Buy on the curve</h3><p>Buy $ROCK anywhere the Meteora curve trades: its site, Jupiter or your terminal of choice.</p></li>
         <li><h3>The hook records it</h3><p>Code attached to the token runs inside your buy and writes a ticket on-chain with your wallet, size and buy number.</p></li>
-        <li><h3>Your Ember is forged</h3><p>The forge mints an Ember from the ticket, or you claim it yourself. Its flame matches how much $ROCK that buy received.</p></li>
-        <li><h3>Graduation closes the forge</h3><p>At a $200,000 market cap, $ROCK moves to a Meteora pool, the hook is removed and no Ember can ever be forged again.</p></li>
+        <li><h3>Your Rocky is forged</h3><p>The forge mints a Rocky from the ticket, or you claim it yourself. Its flame matches how much $ROCK that buy received.</p></li>
+        <li><h3>Graduation closes the forge</h3><p>At a $200,000 market cap, $ROCK moves to a Meteora pool, the hook is removed and no Rocky can ever be forged again.</p></li>
       </ol>
       <div class="rule">
-        <img class="px" src="art/burnt-out.png" width="64" height="64" alt="A burnt-out Ember in grey ash tones">
+        <img class="px" src="art/burnt-out.png" width="64" height="64" alt="A burnt-out Rocky in grey ash tones">
         <div>
-          <h3>Sell during the curve and your Ember burns out</h3>
-          <p>The hook also sees sells. Any wallet that sells before graduation has its Embers turned to ash for good. Hold until graduation and your flame stays lit.</p>
+          <h3>Sell during the curve and your Rocky burns out</h3>
+          <p>The hook also sees sells. Any wallet that sells before graduation has its Rockies turned to ash for good. Hold until graduation and your flame stays lit.</p>
         </div>
       </div>
     </section>
@@ -301,7 +326,7 @@
       <div class="section-head">
         <p class="eyebrow">Rarity is temperature</p>
         <h2 id="temps-title">The bigger the buy, the hotter the flame</h2>
-        <p class="lede">An Ember's tier comes from how much $ROCK the buy that forged it received. The same SOL buys more $ROCK early on the curve, so early buyers burn hottest: about 0.9 SOL forges a Plasma at a $10K market cap, while at $100K it takes about 9 SOL. Buys under 0.1 SOL don't forge an Ember. Each tier is named after a real flame, with that flame's colour temperature, rounded.</p>
+        <p class="lede">A Rocky's tier comes from how much $ROCK the buy that forged it received. The same SOL buys more $ROCK early on the curve, so early buyers burn hottest: about 0.9 SOL forges a Plasma at a $10K market cap, while at $100K it takes about 9 SOL. Buys under 0.1 SOL don't forge a Rocky. Each tier is named after a real flame, with that flame's colour temperature, rounded.</p>
       </div>
       <div>
         <div class="heat" role="img" aria-label="Heat scale from dull red through orange, white, blue and violet to gold"></div>
@@ -336,7 +361,7 @@
         <article class="tier unique">
           <img class="px" src="art/supernova.png" width="64" height="64" alt="Supernova: gold glow with a crown on a dark sunburst">
           <div class="name">Supernova</div>
-          <dl><dt>Supply</dt><dd>3, each 1 of 1</dd><dt>Given to</dt><dd>One lit Ember drawn at random at graduation, the buy that fills the curve and the biggest buyer on the curve</dd><dt>Heat</dt><dd>≈ 1,000,000,000 K</dd></dl>
+          <dl><dt>Supply</dt><dd>3, each 1 of 1</dd><dt>Given to</dt><dd>One lit Rocky drawn at random at graduation, the buy that fills the curve and the biggest buyer on the curve (or the runner-up, if both are the same buy)</dd><dt>Heat</dt><dd>≈ 1,000,000,000 K</dd></dl>
         </article>
       </div>
     </section>
@@ -366,10 +391,10 @@
             <output id="mcap-out" for="mcap">$25K</output>
           </div>
           <label class="check" for="sold"><input id="sold" name="sold" type="checkbox"> I sold before graduation</label>
-          <p id="calc-note" class="lede" style="font-size:14px">Estimates with SOL at $117, price impact included. Each buy forges its own Ember, so ten small buys forge ten cooler Embers, never one hot one.</p>
+          <p id="calc-note" class="lede" style="font-size:14px">Estimates with SOL at $117, price impact included. Each buy forges its own Rocky, so ten small buys forge ten cooler Rockies, never one hot one.</p>
         </form>
         <div class="result" aria-live="polite">
-          <img id="result-img" class="px" src="art/flame.png" width="64" height="64" alt="Flame Ember">
+          <img id="result-img" class="px" src="art/flame.png" width="64" height="64" alt="Flame Rocky">
           <div id="result-name" class="name">Flame</div>
           <div id="result-rock" class="temp"></div>
           <div id="result-temp" class="temp">≈ 1,300 K</div>
@@ -382,8 +407,8 @@
   <div class="panel" id="docs" role="tabpanel" aria-labelledby="tab-docs" hidden>
     <div class="section-head">
       <p class="eyebrow">Docs</p>
-      <h2>How the hook forges Embers</h2>
-      <p class="lede">RockHook is a normal token trade with one extra step hidden inside it. These notes follow a single buy from your wallet to your Ember.</p>
+      <h2>How the hook forges Rockies</h2>
+      <p class="lede">RockHook is a normal token trade with one extra step hidden inside it. These notes follow a single buy from your wallet to your Rocky.</p>
     </div>
     <div class="docs">
       <nav class="toc" aria-label="Docs sections">
@@ -400,7 +425,7 @@
         <section id="doc-hook">
           <h3>The hook</h3>
           <p>Most tokens are passive. They move from wallet to wallet and nothing else happens. $ROCK is a Token-2022 token with a transfer hook: a small program that Solana runs automatically every time the token moves, in the same transaction, with no way to skip it.</p>
-          <p>RockHook's hook doesn't charge anything and can't touch your funds. It does one thing: it watches the token leave the Meteora bonding curve and writes down who received it. That record is what an Ember is forged from.</p>
+          <p>RockHook's hook doesn't charge anything and can't touch your funds. It does one thing: it watches the token leave the Meteora bonding curve and writes down who received it. That record is what a Rocky is forged from.</p>
           <p class="callout">Think of it as a notary sitting inside the token. Every buy on the curve gets witnessed and stamped, whether it came through the RockHook site, Jupiter or a trading terminal.</p>
         </section>
 
@@ -432,7 +457,7 @@
             <div class="row"><span>buy number</span><span>1,204</span></div>
             <div class="row"><span>slot</span><span>412,883,105</span></div>
             <div class="row"><span>tier</span><span>White-hot</span></div>
-            <div class="row"><span>ember</span><span>not claimed yet</span></div>
+            <div class="row"><span>rocky</span><span>not claimed yet</span></div>
             <small>Example values.</small>
           </div>
           <p>Because the buy number and size are written by the program at the moment of the trade, the biggest buyer, the buy that fills the curve and every tier are facts on the chain. Nobody picks winners by hand.</p>
@@ -440,14 +465,14 @@
 
         <section id="doc-forge">
           <h3>Forging</h3>
-          <p>The Ember itself is minted right after the trade, not inside it. That is a deliberate choice. Solana limits how deep one program can call another, and a buy routed through an aggregator like Jupiter is already several calls deep when it reaches the hook. Minting an NFT inside the hook would push those buys over the limit and make them fail.</p>
-          <p>So the hook only writes the ticket, which is cheap and always fits, and the forge turns tickets into Embers a few seconds later. If you'd rather not wait, you can claim your Ember from your ticket yourself. Each ticket forges exactly one Ember, once.</p>
-          <p class="callout">Embers are Metaplex Core NFTs, so they show up in Phantom and trade on Solana NFT marketplaces like any other collection.</p>
+          <p>The Rocky itself is minted right after the trade, not inside it. That is a deliberate choice. Solana limits how deep one program can call another, and a buy routed through an aggregator like Jupiter is already several calls deep when it reaches the hook. Minting an NFT inside the hook would push those buys over the limit and make them fail.</p>
+          <p>So the hook only writes the ticket, which is cheap and always fits, and the forge turns tickets into Rockies a few seconds later. If you'd rather not wait, you can claim your Rocky from your ticket yourself. Each ticket forges exactly one Rocky, once.</p>
+          <p class="callout">Rockies are Metaplex Core NFTs, so they show up in Phantom and trade on Solana NFT marketplaces like any other collection.</p>
         </section>
 
         <section id="doc-heat">
           <h3>Temperature</h3>
-          <p>An Ember's tier is decided by how much $ROCK the single buy that forged it received, which is exactly what the hook sees move. There is no dice roll and nothing hidden. Anyone can check a ticket and know which Ember it produces.</p>
+          <p>A Rocky's tier is decided by how much $ROCK the single buy that forged it received, which is exactly what the hook sees move. There is no dice roll and nothing hidden. Anyone can check a ticket and know which Rocky it produces.</p>
           <p>Because the curve's price rises with every buy, the same SOL gets less $ROCK as the market cap climbs, so early buyers burn hotter by design. The hook also values each buy in SOL at the curve's current price, and buys under 0.1 SOL don't get a ticket, which keeps the collection free of spam.</p>
           <div class="table-wrap">
             <table>
@@ -458,23 +483,23 @@
                 <tr><td>White-hot</td><td class="m">1.77 – 3.77 ROCK</td><td class="m">≈ 1,800 K</td></tr>
                 <tr><td>Blue Flame</td><td class="m">3.77 – 7.77 ROCK</td><td class="m">≈ 2,200 K</td></tr>
                 <tr><td>Plasma</td><td class="m">≥ 7.77 ROCK</td><td class="m">≈ 10,000 K</td></tr>
-                <tr><td>Supernova</td><td>A random draw among lit Embers, the buy that fills the curve, the biggest buyer on the curve</td><td class="m">≈ 10⁹ K</td></tr>
+                <tr><td>Supernova</td><td>A random draw among lit Rockies, the buy that fills the curve, the biggest buyer on the curve (the runner-up if that buyer's biggest buy is the one that fills it)</td><td class="m">≈ 10⁹ K</td></tr>
               </tbody>
             </table>
           </div>
-          <p>At graduation, three Embers go supernova. Two are facts on the chain: the one forged by the buy that fills the curve, and the biggest buy of the wallet that bought the most on the curve in total. That wallet's Supernova is kept even if it sold before graduation. The third is drawn from every Ember still lit at graduation, using verifiable on-chain randomness (VRF), so nobody, the team included, can know or pick the winner in advance. Each Ember's chance grows with the size of the buy that forged it, so splitting a buy into many small ones doesn't help.</p>
+          <p>At graduation, three Rockies go supernova. Two are facts on the chain: the one forged by the buy that fills the curve, and the biggest buy of the wallet that bought the most on the curve in total. That wallet's Supernova is kept even if it sold before graduation. If its biggest buy is also the one that filled the curve, that Supernova passes to the runner-up, the wallet with the second biggest total, so the three always go to different buys. The third is drawn from every other Rocky still lit at graduation. When graduation is recorded, the program fixes a Solana slot 8 slots ahead, and that slot's hash, unknown until the network produces it, picks the winner. Nobody, the team included, can know or choose it in advance. Each Rocky's chance grows with the size of the buy that forged it, so splitting a buy into many small ones doesn't help.</p>
         </section>
 
         <section id="doc-ash">
           <h3>Burning out</h3>
-          <p>The hook runs on sells too, since a sell moves $ROCK back into the curve. When a wallet sells before graduation, the hook flags that wallet's tickets as burnt out, and the forge switches those Embers to the ash artwork. The flag is permanent: buying back later doesn't relight an old Ember, though new buys still forge new ones.</p>
-          <p>After graduation the hook is gone, so trading can no longer burn anything out. Every Ember still lit at graduation stays lit.</p>
+          <p>The hook runs on sells too, since a sell moves $ROCK back into the curve. When a wallet sells before graduation, the hook flags that wallet's tickets as burnt out, and the forge switches those Rockies to the ash artwork. The flag is permanent: buying back later doesn't relight an old Rocky, though new buys still forge new ones.</p>
+          <p>After graduation the hook is gone, so trading can no longer burn anything out. Every Rocky still lit at graduation stays lit.</p>
         </section>
 
         <section id="doc-grad">
           <h3>Graduation</h3>
-          <p>When buys push $ROCK to a $200,000 market cap, the last buy completes the curve. Meteora moves the liquidity into a DAMM v2 pool, where it is locked forever, and removes the hook from the token as part of the migration. From that moment $ROCK is an ordinary token and the forge is closed. Right after, the hook program is locked for good: its upgrade authority is revoked, so nobody, the team included, can ever change the Ember rules again.</p>
-          <p>Tickets written before graduation can still be claimed afterwards. What can't happen is a new ticket. The number of Embers that will ever exist is fixed by the curve.</p>
+          <p>When buys push $ROCK to a $200,000 market cap, the last buy completes the curve. Meteora moves the liquidity into a DAMM v2 pool, where it is locked forever, and removes the hook from the token as part of the migration. From that moment $ROCK is an ordinary token and the forge is closed. Right after, the hook program is locked for good: its upgrade authority is revoked, so nobody, the team included, can ever change the Rocky rules again.</p>
+          <p>Tickets written before graduation can still be claimed afterwards. What can't happen is a new ticket. The number of Rockies that will ever exist is fixed by the curve.</p>
         </section>
 
         <section id="doc-stack">
@@ -486,13 +511,37 @@
                 <tr><td>$ROCK</td><td>777 tokens on Token-2022, with the RockHook transfer hook</td><td class="m">At launch</td></tr>
                 <tr><td>Curve</td><td>Meteora Dynamic Bonding Curve, graduating to DAMM v2</td><td class="m">At launch</td></tr>
                 <tr><td>Hook program</td><td>Writes tickets and burn-out flags</td><td class="m">At launch</td></tr>
-                <tr><td>Embers</td><td>Metaplex Core collection</td><td class="m">At launch</td></tr>
+                <tr><td>Rockies</td><td>Metaplex Core collection</td><td class="m">At launch</td></tr>
               </tbody>
             </table>
           </div>
+          <p>The hook program, the forge and the tests that run a whole launch on a local copy of Solana are open source, so anyone can read the rules and run the forge themselves: <a href="https://github.com/devsolusd1/rockhook/tree/main/program" target="_blank" rel="noopener">github.com/devsolusd1/rockhook</a>.</p>
         </section>
       </div>
     </div>
+  </div>
+
+  <!-- ================= MY EMBERS ================= -->
+  <div class="panel" id="rockies" role="tabpanel" aria-labelledby="tab-rockies" hidden>
+    <section aria-labelledby="mine-title">
+      <div class="section-head">
+        <p class="eyebrow">Your forge</p>
+        <h2 id="mine-title">My Rockies</h2>
+        <p class="lede">Connect your wallet, or look up any address, to see every Rocky its buys forged and whether each one is still lit.</p>
+      </div>
+      <div class="finder">
+        <button class="btn" type="button" id="connect">Connect wallet</button>
+        <form id="lookup" class="lookup" novalidate>
+          <label for="lookup-address">Or look up an address</label>
+          <div class="field wide">
+            <input id="lookup-address" name="lookup-address" type="text" placeholder="Solana wallet address" autocomplete="off" spellcheck="false">
+            <button type="submit" class="field-btn">Look up</button>
+          </div>
+        </form>
+      </div>
+      <p class="notice" id="mine-status" role="status">Rockies show up here once $ROCK launches.</p>
+      <div class="mine" id="mine-list"></div>
+    </section>
   </div>
 
   <!-- ================= FAQ ================= -->
@@ -505,15 +554,15 @@
       <div class="faq">
         <details>
           <summary>Why 777 $ROCK?</summary>
-          <p>777 °C is forge heat. It sits just past 770 °C, the Curie point of iron, where hot steel stops sticking to a magnet and a blacksmith knows it's ready to be hardened. That's the moment a lump of metal becomes something that keeps its shape, which is what the hook does to every buy. The sevens run through the rest too: an Ember can end in seven states (five flames, the Supernova and the ash), and the tiers step up at 0.77, 1.77, 3.77 and 7.77 $ROCK.</p>
+          <p>777 °C is forge heat. It sits just past 770 °C, the Curie point of iron, where hot steel stops sticking to a magnet and a blacksmith knows it's ready to be hardened. That's the moment a lump of metal becomes something that keeps its shape, which is what the hook does to every buy. The sevens run through the rest too: a Rocky can end in seven states (five flames, the Supernova and the ash), and the tiers step up at 0.77, 1.77, 3.77 and 7.77 $ROCK.</p>
         </details>
         <details>
-          <summary>How many Embers will exist?</summary>
+          <summary>How many Rockies will exist?</summary>
           <p>One for every buy made on the curve before graduation, and three of them go supernova at the end. Nobody knows the final number until the curve fills, and nobody can add to it afterwards.</p>
         </details>
         <details>
-          <summary>Do I have to do anything to get my Ember?</summary>
-          <p>No. Buy on the curve and the forge mints your Ember to the wallet that bought. You can also claim it yourself from your ticket if you don't want to wait.</p>
+          <summary>Do I have to do anything to get my Rocky?</summary>
+          <p>No. Buy on the curve and the forge mints your Rocky to the wallet that bought. You can also claim it yourself in the My Rockies tab if you don't want to wait.</p>
         </details>
         <details>
           <summary>Does it matter where I buy?</summary>
@@ -521,15 +570,15 @@
         </details>
         <details>
           <summary>Can I game the rarity?</summary>
-          <p>The tier depends only on how much $ROCK a single buy receives, and every buy is public on-chain. Splitting a buy gives you more Embers at a cooler tier. One Supernova is drawn at random from the Embers still lit at graduation, and the other two go to events that can each happen only once.</p>
+          <p>The tier depends only on how much $ROCK a single buy receives, and every buy is public on-chain. Splitting a buy gives you more Rockies at a cooler tier. One Supernova is drawn at random from the Rockies still lit at graduation, and the other two go to events that can each happen only once.</p>
         </details>
         <details>
           <summary>What happens after graduation?</summary>
           <p>$ROCK keeps trading on a Meteora pool whose liquidity is locked forever. The hook is removed at graduation, so trades after that forge nothing and burn nothing out. The collection is final.</p>
         </details>
         <details>
-          <summary>Where will I see my Ember?</summary>
-          <p>In any Solana wallet or marketplace that shows NFTs, such as Phantom. Embers are Metaplex Core NFTs.</p>
+          <summary>Where will I see my Rocky?</summary>
+          <p>In any Solana wallet or marketplace that shows NFTs, such as Phantom. Rockies are Metaplex Core NFTs.</p>
         </details>
       </div>
     </section>
@@ -592,7 +641,7 @@
       step = (step + 1) % cycle.length;
       const t = cycle[step];
       pImg.src = `art/${t.id}.png`;
-      pImg.alt = `${t.name} Ember`;
+      pImg.alt = `${t.name} Rocky`;
       pName.textContent = t.name;
       pTemp.textContent = t.temp;
       portrait.style.setProperty('--glow', t.glow);
@@ -630,7 +679,7 @@
     let tier;
     let rockText = '';
     if (!(sol >= MIN_SOL)) {
-      tier = { id: 'burnt-out', name: 'No Ember', temp: "Buys under 0.1 SOL don't forge one" };
+      tier = { id: 'burnt-out', name: 'No Rocky', temp: "Buys under 0.1 SOL don't forge one" };
     } else {
       const rock = rockFor(sol, cap);
       rockText = `≈ ${rock.toFixed(3)} ROCK`;
@@ -639,7 +688,7 @@
         : TIERS.find((t) => rock < t.max);
     }
     img.src = `art/${tier.id}.png`;
-    img.alt = `${tier.name} Ember`;
+    img.alt = `${tier.name} Rocky`;
     nameEl.textContent = tier.name;
     rockEl.textContent = rockText;
     tempEl.textContent = tier.temp;
@@ -651,6 +700,198 @@
     b.addEventListener('click', () => { amount.value = b.dataset.sol; update(); }));
   document.getElementById('calc-form').addEventListener('submit', (e) => e.preventDefault());
   update();
+
+  // ---------- live data: only once the mint is set at launch ----------
+  const params = new URLSearchParams(location.search);
+  const CONFIG = {
+    // Reads and claims go through this RPC; use a domain-restricted key on the live site.
+    rpc: params.get('rpc') || 'https://api.mainnet-beta.solana.com',
+    // The $ROCK mint, filled in at launch.
+    mint: params.get('mint') || '',
+    program: '342z5Sawvar7fcAiyt9J82ysEYs5rGaJp5wuH27Q9AAS',
+  };
+  const CORE = 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d';
+  const TICKET_SIZE = 81;
+  const SLUGS = ['ember', 'flame', 'white-hot', 'blue-flame', 'plasma'];
+  const NAMES = ['Ember', 'Flame', 'White-hot', 'Blue Flame', 'Plasma'];
+
+  let web3Loading;
+  function loadWeb3() {
+    web3Loading ??= new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.98.4/lib/index.iife.min.js';
+      script.onload = () => resolve(window.solanaWeb3);
+      script.onerror = () => reject(new Error('Could not load the Solana library. Check your connection and try again.'));
+      document.head.append(script);
+    });
+    return web3Loading;
+  }
+
+  let chainReady;
+  function chain() {
+    chainReady ??= loadWeb3().then((W) => {
+      const program = new W.PublicKey(CONFIG.program);
+      const mint = new W.PublicKey(CONFIG.mint);
+      const text = (s) => new TextEncoder().encode(s);
+      const u64 = (n) => { const b = new Uint8Array(8); new DataView(b.buffer).setBigUint64(0, BigInt(n), true); return b; };
+      const pda = (...seeds) => W.PublicKey.findProgramAddressSync(seeds, program)[0];
+      return {
+        W, program, mint, conn: new W.Connection(CONFIG.rpc, 'confirmed'),
+        forge: pda(text('forge'), mint.toBytes()),
+        rockies: pda(text('rockies'), mint.toBytes()),
+        authority: pda(text('authority'), mint.toBytes()),
+        collection: pda(text('collection'), mint.toBytes()),
+        ticket: (seq) => pda(text('ticket'), mint.toBytes(), u64(seq)),
+        holder: (wallet) => pda(text('holder'), mint.toBytes(), wallet.toBytes()),
+        rocky: (seq) => pda(text('rocky'), mint.toBytes(), u64(seq)),
+      };
+    });
+    return chainReady;
+  }
+  const view = (d) => new DataView(d.buffer, d.byteOffset, d.byteLength);
+
+  async function ticketsOf(wallet) {
+    const c = await chain();
+    const accounts = await c.conn.getProgramAccounts(c.program, {
+      filters: [{ dataSize: TICKET_SIZE }, { memcmp: { offset: 8, bytes: wallet.toBase58() } }],
+    });
+    const holder = await c.conn.getAccountInfo(c.holder(wallet));
+    const burnBefore = holder ? Number(view(holder.data).getBigUint64(60, true)) : 0;
+    return accounts
+      .map(({ pubkey, account }) => {
+        const d = account.data, v = view(d);
+        return {
+          pubkey, wallet, seq: Number(v.getBigUint64(40, true)), amount: Number(v.getBigUint64(56, true)) / 1e9,
+          number: v.getUint32(72, true), tier: d[76], minted: d[77] === 1, ashed: d[78] === 1, supernova: d[79] === 1,
+        };
+      })
+      .filter((t) => c.ticket(t.seq).equals(t.pubkey))
+      .map((t) => ({ ...t, burnt: t.ashed || (!t.supernova && burnBefore > t.seq) }))
+      .sort((a, b) => a.number - b.number);
+  }
+
+  /** The claim transaction for a ticket whose Rocky isn't minted yet; `payer` signs and pays the rent. */
+  async function buildClaimTx(ticket, payer) {
+    const c = await chain();
+    const { W } = c;
+    const disc = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('global:mint_rocky'))).slice(0, 8);
+    const key = (pubkey, isWritable = false, isSigner = false) => ({ pubkey, isWritable, isSigner });
+    const ix = new W.TransactionInstruction({
+      programId: c.program,
+      keys: [
+        key(payer, true, true), key(c.rockies), key(c.ticket(ticket.seq), true), key(c.holder(ticket.wallet)), key(ticket.wallet),
+        key(c.authority), key(c.collection, true), key(c.rocky(ticket.seq), true), key(new W.PublicKey(CORE)), key(W.SystemProgram.programId),
+      ],
+      data: disc,
+    });
+    const tx = new W.Transaction().add(W.ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), ix);
+    tx.feePayer = payer;
+    tx.recentBlockhash = (await c.conn.getLatestBlockhash()).blockhash;
+    return tx;
+  }
+
+  const mineStatus = document.getElementById('mine-status');
+  const mineList = document.getElementById('mine-list');
+  let connected = null; // { provider, publicKey }
+
+  function provider() {
+    return window.phantom?.solana ?? window.solflare ?? window.backpack ?? window.solana ?? null;
+  }
+  function say(message, isError = false) {
+    mineStatus.textContent = message;
+    mineStatus.classList.toggle('error', isError);
+  }
+
+  function rockyCard(t) {
+    const slug = t.supernova ? 'supernova' : t.burnt ? 'burnt-out' : SLUGS[t.tier];
+    const status = t.supernova ? ['Supernova', 'nova'] : t.burnt ? ['Burnt out', 'ash'] : t.minted ? ['Lit', 'lit'] : ['Not minted yet', 'pending'];
+    const card = document.createElement('article');
+    card.className = `rocky-card${t.supernova ? ' supernova' : ''}`;
+    card.innerHTML = `
+      <img class="px" src="art/${slug}.png" width="64" height="64" alt="">
+      <div class="name">${t.supernova ? 'Supernova' : 'Rocky'} #${t.number}</div>
+      <span class="chip ${status[1]}">${status[0]}</span>
+      <dl><dt>Tier</dt><dd>${NAMES[t.tier]}</dd><dt>$ROCK</dt><dd>${t.amount.toFixed(3)}</dd></dl>`;
+    card.querySelector('img').alt = `${status[0]} ${NAMES[t.tier]} Rocky`;
+    if (!t.minted) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.textContent = connected ? 'Claim (≈ 0.003 SOL)' : 'Connect to claim';
+      button.disabled = !connected;
+      button.addEventListener('click', () => claim(t, button));
+      card.append(button);
+    }
+    return card;
+  }
+
+  async function showRockies(wallet) {
+    say('Reading the chain…');
+    mineList.replaceChildren();
+    try {
+      const tickets = await ticketsOf(wallet);
+      mineList.replaceChildren(...tickets.map(rockyCard));
+      const lit = tickets.filter((t) => !t.burnt).length;
+      say(tickets.length
+        ? `${tickets.length} ${tickets.length > 1 ? 'Rockies' : 'Rocky'} for ${wallet.toBase58().slice(0, 4)}…${wallet.toBase58().slice(-4)}, ${lit} still lit.`
+        : 'No Rockies for this address yet. Buys under 0.1 SOL don’t forge one.');
+    } catch (e) {
+      say(`Couldn’t read the chain: ${e.message}`, true);
+    }
+  }
+
+  async function claim(ticket, button) {
+    button.disabled = true;
+    button.textContent = 'Confirm in your wallet…';
+    try {
+      const tx = await buildClaimTx(ticket, connected.publicKey);
+      const { signature } = await connected.provider.signAndSendTransaction(tx);
+      button.textContent = 'Forging…';
+      await (await chain()).conn.confirmTransaction(signature, 'confirmed');
+      await showRockies(ticket.wallet);
+    } catch (e) {
+      button.disabled = false;
+      button.textContent = 'Claim (≈ 0.003 SOL)';
+      say(`The claim didn’t go through: ${e.message}`, true);
+    }
+  }
+
+  document.getElementById('connect').addEventListener('click', async () => {
+    if (!CONFIG.mint) return say('Rockies show up here once $ROCK launches.');
+    const p = provider();
+    if (!p) return say('No Solana wallet found in this browser. Look up your address instead.', true);
+    try {
+      const { publicKey } = await p.connect();
+      connected = { provider: p, publicKey: publicKey ?? p.publicKey };
+      document.getElementById('connect').textContent = `${connected.publicKey.toBase58().slice(0, 4)}…${connected.publicKey.toBase58().slice(-4)}`;
+      await showRockies(connected.publicKey);
+    } catch (e) {
+      say(`The wallet didn’t connect: ${e.message}`, true);
+    }
+  });
+  document.getElementById('lookup').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!CONFIG.mint) return say('Rockies show up here once $ROCK launches.');
+    const value = document.getElementById('lookup-address').value.trim();
+    try {
+      const { W } = await chain();
+      await showRockies(new W.PublicKey(value));
+    } catch {
+      say('That isn’t a Solana address. Paste a wallet address like the one in your wallet app.', true);
+    }
+  });
+
+  // Live Rockies count and contract once the mint is set.
+  if (CONFIG.mint) {
+    document.getElementById('ca').textContent = CONFIG.mint;
+    say('Connect your wallet or look up an address.');
+    chain()
+      .then(async (c) => {
+        const forge = await c.conn.getAccountInfo(c.forge);
+        if (forge) document.getElementById('forged-count').textContent = view(forge.data).getUint32(56, true).toLocaleString('en-US');
+      })
+      .catch(() => {});
+  }
 </script>
 </body>
 </html>

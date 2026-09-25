@@ -3,5 +3,12 @@ __pycache__/
 .DS_Store
 .env
 *.keypair.json
+*-keypair.json
+id.json
 node_modules/
 launch/
+# program build output and local validator data
+program/target/
+program/.anchor/
+program/test-ledger/
+program/localtest/ledger/

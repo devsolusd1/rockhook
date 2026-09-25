@@ -1,0 +1,42 @@
+[package]
+name = "rockhook-hook"
+version = "0.1.0"
+description = "RockHook transfer hook: records every $ROCK buy, sell and transfer on the Meteora curve"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "rockhook_hook"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+
+[dependencies]
+anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
+# zero_copy accounts; min_const_generics makes the 4096-entry ledger array Pod
+bytemuck = { version = "1", features = ["derive", "min_const_generics"] }
+mpl-core = "0.12.1"
+solana-sha256-hasher = "3"
+spl-discriminator = "0.5"
+spl-tlv-account-resolution = "0.11"
+spl-transfer-hook-interface = "2.1"
+
+[dev-dependencies]
+litesvm = "0.10.0"
+solana-message = "3.0.1"
+solana-transaction = "3.0.2"
+solana-signer = "3.0.0"
+solana-keypair = "3.0.1"
+
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

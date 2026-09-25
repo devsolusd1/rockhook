@@ -1,0 +1,23 @@
+{
+  "name": "rockhook-hook",
+  "private": true,
+  "license": "ISC",
+  "scripts": {
+    "forge": "node forge/forge.mjs",
+    "validator": "bash localtest/start-validator.sh",
+    "test:phase1": "node localtest/test-phase1.mjs",
+    "test:phase2": "node localtest/test-phase2.mjs",
+    "test:phase3": "node localtest/test-phase3.mjs",
+    "test:phase4": "node localtest/test-phase4.mjs",
+    "test:runnerup": "node localtest/test-runnerup.mjs",
+    "test:stress": "node localtest/test-stress.mjs",
+    "test:draw-late": "node localtest/test-draw-late.mjs"
+  },
+  "dependencies": {
+    "@meteora-ag/cp-amm-sdk": "^1.1.0",
+    "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.10",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.1"
+  }
+}
